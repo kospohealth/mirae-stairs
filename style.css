@@ -1,0 +1,976 @@
+@import url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css');
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; user-select: none; }
+    :root {
+      --cream: #fff8df;
+      --cream-soft: rgba(255, 248, 223, .94);
+      --ink: #22314a;
+      --line: rgba(34, 49, 74, .18);
+      --red: #ef4444;
+      --green: #86efac;
+      --sky: #dff4ff;
+      --yellow: #ffd84d;
+      --orange: #ff9f1c;
+      --button-cream: rgba(255, 252, 235, .96);
+      --shadow: 0 12px 30px rgba(0,0,0,.18);
+      --soft-shadow: 0 8px 20px rgba(21, 37, 67, .14);
+    }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #20113f; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 600; color: #fff; }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    #gameWrap {
+      position: relative;
+      width: min(100vw, 56.25vh);
+      height: min(177.78vw, 100vh);
+      aspect-ratio: 9 / 16;
+      overflow: hidden;
+      border-radius: 22px;
+      border: 2px solid rgba(255,255,255,.72);
+      touch-action: none;
+      background: linear-gradient(180deg, #ff7a18 0%, #ffb703 18%, #7dd3fc 45%, #bae6fd 68%, #fde68a 100%);
+      box-shadow: 0 22px 60px rgba(21,37,67,.26);
+    }
+    #gameWrap::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,.10) 0 2px, transparent 2px 4px), repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 30px);
+      opacity: .22;
+    }
+
+    /* ==================================================
+       첫 진입 로딩 화면
+       - 큰 배경/캐릭터 이미지를 준비하는 동안 빈 화면처럼 보이지 않게 합니다.
+       - JS에서 이미지 준비가 끝나면 .hide 클래스를 붙여 부드럽게 사라집니다.
+    ================================================== */
+    #loadingOverlay {
+      position: absolute;
+      inset: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        linear-gradient(rgba(255,248,224,.72), rgba(255,235,180,.82)),
+        url("assets/main_background.png") center / cover no-repeat;
+      transition: opacity .35s ease, visibility .35s ease;
+    }
+
+    #loadingOverlay.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loadingBox {
+      width: min(72%, 300px);
+      padding: 22px 20px;
+      border: 1px solid rgba(230,205,160,.9);
+      border-radius: 22px;
+      background: rgba(255,251,242,.86);
+      box-shadow: 0 14px 30px rgba(91,58,20,.22);
+      text-align: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .loadingTitle {
+      margin-bottom: 8px;
+      color: #4a341e;
+      font-size: 25px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .loadingText {
+      margin-bottom: 14px;
+      color: #7a6245;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .loadingBar {
+      width: 100%;
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #ead8b8;
+      box-shadow: inset 0 2px 4px rgba(120,80,30,.18);
+    }
+
+    .loadingBar span {
+      display: block;
+      width: 45%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(to right, #ffd84d, #ff8a00);
+      animation: loadingMove .85s ease-in-out infinite alternate;
+    }
+
+    @keyframes loadingMove {
+      from { transform: translateX(-35%); }
+      to { transform: translateX(135%); }
+    }
+
+    .bgLayer {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transition: opacity .7s ease;
+      will-change: opacity;
+    }
+    .bgLayer.active { opacity: 1; }
+
+    #decorLayer { position: absolute; inset: 0; pointer-events: none; z-index: 2; overflow: hidden; }
+    .decor { position: absolute; filter: drop-shadow(3px 3px 0 rgba(63,47,37,.18)); }
+    .sun {
+      width: 92px;
+      height: 92px;
+
+      background:
+        url("assets/sun.png")
+        center / contain no-repeat;
+
+      border: 0;
+      border-radius: 50%;
+      box-shadow: none;
+    }
+    .sun::before { display: none; }
+    .heatText { padding: 8px 10px; background: #ef4444; color: #fff7d6; border: 1px solid rgba(34,49,74,.18); border-radius: 14px; font-weight: 900; font-size: 18px; box-shadow: var(--soft-shadow); }
+    .star { width: 10px; height: 10px; background: #fef08a; box-shadow: 22px 24px 0 #e0f2fe, -22px 12px 0 #fff7d6, 44px -8px 0 #fef3c7; }
+
+    /* ==================================================
+       플레이 화면 상단 HUD
+       - 점수 / 시간 / 부스터 / 사운드 / 일시정지를 한 줄에 담는 캡슐입니다.
+       - 숫자가 잘리는 경우: .scoreMetric, .timeMetric의 min-width를 키우면 됩니다.
+       - 버튼이 삐져나오면: #hud의 width를 키우거나 gap/padding을 줄이면 됩니다.
+    ================================================== */
+    #hud {
+      position: absolute;
+      top: max(16px, calc(env(safe-area-inset-top) + 6px)); /* 노치/Dynamic Island와 겹치지 않게 여백 확보 */
+      left: 50%;                 /* 가운데 정렬을 위해 50% 지점으로 이동 */
+      z-index: 45;
+      display: grid;
+      grid-template-columns: auto auto auto auto;
+      align-items: center;
+      gap: 6px;                  /* HUD 내부 큰 덩어리 사이 간격 */
+      width: calc(100% - 10px);  /* 바깥 캡슐 폭. 값이 작을수록 더 넓어집니다. */
+      max-width: 440px;          /* 데스크톱/큰 화면에서 너무 길어지지 않게 제한 */
+      min-height: 58px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.42);
+      border-radius: 26px;
+      background: rgba(255,255,255,.28);
+      box-shadow: 0 12px 26px rgba(21,37,67,.18), inset 0 2px 0 rgba(255,255,255,.42);
+      backdrop-filter: blur(10px) saturate(1.08);
+      font-weight: 900;
+      pointer-events: auto;
+      transform: translateX(-50%);
+    }
+
+    /* 점수/시간/부스터 한 칸씩의 공통 스타일 */
+    .hudMetric {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      min-width: 66px;
+      height: 38px;
+      padding: 0 10px;
+      border: 1px solid rgba(255,255,255,.34);
+      border-radius: 18px;
+      background: rgba(255,252,235,.36);
+      color: #24324a;
+      font-size: 15px;
+      line-height: 1;
+      text-shadow: 0 1px 0 rgba(255,255,255,.42);
+      white-space: nowrap;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 4px 10px rgba(21,37,67,.08);
+    }
+
+    /* 점수는 다섯 자리까지 들어가도록 가장 넓게 잡습니다. */
+    .scoreMetric { min-width: 104px; }
+
+    /* 시간도 999s 이상까지 답답하지 않게 넉넉하게 잡습니다. */
+    .timeMetric { min-width: 92px; }
+
+    .hudIcon { font-size: 17px; }
+    #score, #time {
+      color: #f05a24;
+      font-size: 23px;
+      font-weight: 900;
+      text-shadow: 0 1px 0 rgba(255,255,255,.35);
+    }
+    .hudUnit { font-size: 16px; font-weight: 900; color: #4a341e; }
+
+    /* 부스터 칸: 기본은 x0, 활성화되면 JS에서 짧은 상태 문구로 바뀝니다. */
+    #boosterText {
+      min-width: 64px;
+      max-width: 94px;
+      color: #4a341e;
+      font-size: 18px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #boosterText.active {
+      background: rgba(255,229,116,.42);
+      border-color: rgba(239,124,30,.25);
+      color: #3f2f1d;
+    }
+
+    /* 오른쪽 아이콘 버튼 묶음: BGM / 효과음 / 일시정지 */
+    #soundControls {
+      justify-self: end;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* HUD 안의 원형 게임 버튼 */
+    .soundBtn {
+      width: 38px;
+      height: 38px;
+      min-width: 0;
+      min-height: 0;
+      margin: 0;
+      padding: 0;
+      background: rgba(255,252,235,.52);
+      color: var(--ink);
+      border: 1px solid rgba(255,255,255,.42);
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 4px 10px rgba(21,37,67,.10);
+      backdrop-filter: blur(8px);
+      transition: transform .08s ease, box-shadow .08s ease, filter .08s ease, opacity .08s ease;
+    }
+
+    /* OFF 상태는 흐리게 보여서 현재 상태를 바로 알 수 있게 합니다. */
+    .soundBtn.off {
+      opacity: .42;
+      filter: grayscale(.35);
+      background: rgba(255,255,255,.24);
+    }
+
+    /* 모바일 터치 시 살짝 눌리는 느낌 */
+    .soundBtn:active {
+      transform: translateY(2px) scale(.97);
+      box-shadow: inset 0 2px 0 rgba(0,0,0,.08);
+    }
+    .pauseBtn {
+      font-size: 17px;
+      color: #4a341e;
+      background: rgba(255,240,179,.58);
+    }
+
+    /* 430px 이하 모바일: 점수/시간 공간은 유지하되 전체가 삐져나오지 않게 살짝 압축 */
+    @media (max-width: 430px) {
+      #hud {
+        gap: 6px;
+        width: calc(100% - 8px);
+        padding: 8px;
+      }
+      .hudMetric {
+        min-width: 56px;
+        height: 36px;
+        padding: 0 8px;
+      }
+      .scoreMetric { min-width: 94px; }
+      .timeMetric { min-width: 82px; }
+      #score, #time { font-size: 20px; }
+      #boosterText {
+        min-width: 56px;
+        max-width: 72px;
+        font-size: 16px;
+      }
+      #soundControls { gap: 4px; }
+      .soundBtn {
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+      }
+    }
+
+    /* 아주 좁은 화면: 마지막 안전장치 */
+    @media (max-width: 360px) {
+      #hud {
+        gap: 5px;
+        padding: 7px 6px;
+      }
+      .scoreMetric { min-width: 86px; }
+      .timeMetric { min-width: 74px; }
+      #score, #time { font-size: 19px; }
+      #boosterText {
+        min-width: 50px;
+        max-width: 62px;
+        font-size: 15px;
+      }
+      .soundBtn {
+        width: 32px;
+        height: 32px;
+        font-size: 15px;
+      }
+    }
+
+    #gameArea { position: absolute; inset: 0; overflow: hidden; z-index: 3; }
+    #world { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 5; will-change: transform; }
+    .step {
+      position: absolute;
+      width: 100px;
+      height: 36px;
+      border-radius: 7px;
+      /* 베이지/황토 석재 계단 느낌: 위는 밝게, 아래로 갈수록 진하게 */
+      background:
+        /* 표면 노이즈: 아주 미세한 결 */
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px,
+          transparent 9px,
+          rgba(120,80,30,.04) 9px,
+          rgba(120,80,30,.04) 10px
+        ),
+        linear-gradient(180deg,
+          #f5dfa0 0%,
+          #e8c97a 38%,
+          #d4a94e 72%,
+          #b88743 100%
+        );
+      border: 1.5px solid rgba(100,60,10,.28);
+      /* 하단 그림자는 석재 음영처럼 자연스럽게 */
+      box-shadow:
+        0 5px 0 rgba(90,55,10,.45),
+        0 8px 14px rgba(34,24,8,.20);
+      z-index: 6;
+    }
+    /* 상단 하이라이트: 얇고 부드럽게 */
+    .step::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      top: 4px;
+      height: 4px;
+      border-radius: 3px;
+      background: rgba(255,252,220,.52);
+    }
+    /* 하단 내부 음영선 (돌 아랫면 느낌) */
+    .step::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 10px;
+      border-radius: 0 0 6px 6px;
+      background: rgba(80,40,5,.15);
+    }
+    /* 현재 선택 발판: 부드러운 황금빛 테두리 */
+    .step.current {
+      outline: 2.5px solid rgba(255,240,160,.72);
+      outline-offset: 3px;
+      box-shadow:
+        0 5px 0 rgba(90,55,10,.45),
+        0 8px 14px rgba(34,24,8,.20),
+        0 0 0 5px rgba(255,220,80,.14);
+    }
+
+    #player {
+      position: absolute;
+      width: 92px;
+      height: 92px;
+      background: url("assets/mirae.png") center / contain no-repeat;
+      z-index: 22;
+
+      transform: translate(-50%, -100%);
+
+      /* iOS Safari에서는 transform + filter 조합에서 이미지가 사라지는 경우가 있어 transform만 사용합니다. */
+      will-change: transform;
+    }
+
+    #timerBarWrap { position: absolute; left: 20px; right: 20px; bottom: max(20px, calc(env(safe-area-inset-bottom) + 8px)); height: 16px; background: var(--cream-soft); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; z-index: 32; box-shadow: var(--soft-shadow); }
+    #timerBar { width: 100%; height: 100%; background: linear-gradient(90deg, #22c55e, #facc15, #fb7185); transform-origin: left center; }
+    #directionGuide { position: absolute; left: 50px; right: 50px; bottom: max(84px, calc(env(safe-area-inset-bottom) + 72px)); z-index: 32; display: flex; justify-content: space-between; pointer-events: none; }
+    .guideKey {
+      width: 62px;
+      height: 62px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(8px);
+
+      color: #1f2937;
+
+      border: 1px solid rgba(255,255,255,.52);
+      border-radius: 20px;
+
+      font-size: 24px;
+      font-weight: 900;
+
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,.55),
+        0 6px 14px rgba(0,0,0,.12);
+    }
+    .leftKey { transform: rotate(-2deg); }
+    .rightKey { transform: rotate(2deg); }
+    #touchGuide { position: absolute; bottom: max(48px, calc(env(safe-area-inset-bottom) + 36px)); left: 50%; transform: translateX(-50%); z-index: 32; font-size: 12px; font-weight: 900; background: var(--cream-soft); color: var(--ink); padding: 8px 13px; white-space: nowrap; border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--soft-shadow); }
+    #toast { position: absolute; z-index: 45; top: 84px; left: 50%; transform: translateX(-50%); padding: 10px 14px; background: var(--cream-soft); color: var(--red); font-weight: 900; text-align: center; min-width: 170px; pointer-events: none; border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+
+    .overlay { position: absolute; inset: 0; z-index: 60; background: rgba(20,31,54,.50); display: flex; align-items: center; justify-content: center; padding: 28px; backdrop-filter: blur(12px) saturate(1.08); }
+    .hidden { display: none !important; }
+    .panel { position: relative; width: 100%; max-width: 360px; background: linear-gradient(to bottom, #fffdf1 0%, #fff4d6 100%); color: var(--ink); padding: 30px 24px 24px; text-align: center; box-shadow: inset 0 5px 0 rgba(255,255,255,.74), 0 10px 0 rgba(186,137,69,.38), 0 24px 42px rgba(0,0,0,.24); border: 1px solid rgba(116,80,38,.16); border-radius: 28px; animation: popupIn .18s ease-out both; }
+    .panel::before { content: ""; position: absolute; left: 18px; right: 18px; top: 8px; height: 18px; border-radius: 999px; background: linear-gradient(rgba(255,255,255,.72), rgba(255,255,255,0)); pointer-events: none; }
+    @keyframes popupIn { from { opacity: 0; transform: translateY(22px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .pausePanel {
+      max-width: 280px;
+      padding: 28px 22px 22px;
+      border-radius: 24px;
+    }
+    .pausePanel h2 {
+      margin-bottom: 18px;
+      font-size: 26px;
+      font-weight: 900;
+      color: #22314a;
+      letter-spacing: .5px;
+    }
+    .pauseScoreBox {
+      display: grid;
+      gap: 4px;
+      margin: 0 0 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(116,80,38,.14);
+      border-radius: 16px;
+      background: rgba(255,255,255,.48);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.55);
+    }
+    .pauseScoreBox span {
+      color: #334155;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .pauseScoreBox strong {
+      color: #ff8a00;
+      font-size: 34px;
+      font-weight: 900;
+      line-height: 1;
+      text-shadow: 0 2px 0 rgba(255,255,255,.6);
+    }
+    .pauseSoundControls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+    .pauseSoundControls button {
+      height: 36px;
+      min-height: 0;
+      margin: 0;
+      padding: 0 8px;
+      border: 1px solid rgba(35,52,80,.12);
+      border-radius: 12px;
+      background: rgba(255,252,235,.92);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 900;
+      box-shadow: 0 3px 0 rgba(35,52,80,.12), 0 6px 10px rgba(12,47,86,.10);
+    }
+    .pauseSoundControls button.off {
+      background: rgba(255,255,255,.48);
+      color: rgba(34,49,74,.62);
+      opacity: .7;
+      filter: grayscale(.2);
+    }
+    .pauseSoundControls button:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 rgba(35,52,80,.12), 0 4px 8px rgba(12,47,86,.08);
+    }
+    .pauseActionBtn {
+      height: 50px;
+      min-height: 0;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 900;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.85), 0 5px 0 #d6c2a1, 0 8px 10px rgba(0,0,0,.12);
+    }
+    .resumeBtn {
+      background: linear-gradient(to bottom, #ffa73b 0%, #ff5d00 100%);
+      color: #ffffff;
+      text-shadow: 0 2px 0 rgba(80, 40, 0, .28);
+      box-shadow: inset 0 4px 0 rgba(255,255,255,.45), 0 6px 0 #a13600, 0 10px 8px rgba(0,0,0,.2);
+    }
+    .pauseMainBtn {
+      background: linear-gradient(to bottom, #ffffff 0%, #fff4e0 100%);
+      color: #4a341e;
+    }
+    .resumeBtn:active {
+      transform: translateY(4px);
+      box-shadow: inset 0 4px 0 rgba(255,255,255,.35), 0 2px 0 #a13600, 0 4px 4px rgba(0,0,0,.2);
+    }
+    .pauseMainBtn:active {
+      transform: translateY(3px);
+      box-shadow: inset 0 3px 0 rgba(255,255,255,1), 0 2px 0 #d6c2a1, 0 4px 4px rgba(0,0,0,.12);
+    }
+    .mainOverlay { background: url("assets/main_background.png") center / cover no-repeat; align-items: flex-start; padding: 0 24px; backdrop-filter: none; opacity: 0; visibility: hidden; transition: opacity .22s ease; }
+    #gameWrap.mainReady .mainOverlay { opacity: 1; visibility: visible; }
+    #gameWrap.mainReady .mainOverlay.hidden { display: none !important; }
+    .mainSun { position: absolute; top: clamp(24px, 4.5%, 42px); right: clamp(24px, 7%, 44px); width: clamp(70px, 21vw, 90px); height: clamp(70px, 21vw, 90px); object-fit: contain; pointer-events: none; filter: drop-shadow(0 10px 18px rgba(255,155,0,.24)); animation: sunFloat 3.2s ease-in-out infinite; }
+    @keyframes sunFloat { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
+    .mainPanel { position: absolute; left: 24px; right: 24px; bottom: max(clamp(102px, 18%, 174px), calc(env(safe-area-inset-bottom) + 18px)); max-width: 336px; margin: 0 auto; background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; backdrop-filter: none; }
+    .mainPanel h1, .mainPanel p { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .panel h1, .panel h2 { display: block; margin: 0 0 18px; padding: 0; color: #2b2b2b; font-size: 30px; font-weight: 900; line-height: 1.1; letter-spacing: -0.6px; background: none; box-shadow: none; border-radius: 0; text-shadow: none;}
+    .panel p { margin: 10px 0 18px; color: var(--ink); line-height: 1.58; font-size: 18px; font-weight: 700; margin-bottom: 10px;}
+    button { min-height: 52px; border: 1px solid var(--line); border-radius: 18px; letter-spacing: 0.8px; padding: 0 18px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; cursor: pointer; color: var(--ink); background: var(--green); box-shadow: var(--soft-shadow); width: 100%; margin-top: 14px; transition: transform .08s ease, box-shadow .08s ease, filter .08s ease; }
+    .menuButtons { display: grid; gap: 0; margin-top: 0; }
+    .menu-container { margin-bottom: 20px; }
+    .btn-main-play {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 88%;
+      max-width: 360px;
+      height: 82px;
+      min-height: 0;
+      margin: 0 auto 15px auto;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      position: relative;
+      background: linear-gradient(to bottom, #ffa73b 0%, #ff5d00 100%);
+      box-shadow:
+        inset 0 6px 0 rgba(255,255,255,.45),
+        0 8px 0 #a13600,
+        0 12px 10px rgba(0,0,0,.3);
+      transition: all .05s ease-in-out;
+    }
+    .btn-main-play .text-main {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      font-family: 'Pretendard', 'Arial Black', sans-serif;
+      font-size: 30px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.8px;
+      -webkit-text-stroke: 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,.28), 0 1px 0 rgba(0,0,0,.2);
+    }
+    .btn-main-play:active {
+      transform: translateY(6px);
+      box-shadow:
+        inset 0 4px 0 rgba(255,255,255,.35),
+        0 3px 0 #a13600,
+        0 6px 6px rgba(0,0,0,.24);
+    }
+    .btn-sub {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 82%;
+      max-width: 340px;
+      height: 60px;
+      min-height: 0;
+      margin: 0 auto 14px auto;
+      border: none;
+      border-radius: 18px;
+      cursor: pointer;
+      background: linear-gradient(to bottom, #ffffff 0%, #fff4e0 100%);
+      box-shadow:
+        inset 0 3px 0 rgba(255,255,255,1),
+        inset 0 -3px 0 rgba(0,0,0,.05),
+        0 6px 0 #d6c2a1,
+        0 10px 8px rgba(0,0,0,.15);
+      transition: all .05s ease-in-out;
+    }
+    .btn-sub .text-sub {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      font-size: 20px;
+      font-weight: 800;
+      color: #4a341e;
+      text-shadow: 0 1px 0 #ffffff;
+    }
+    .btn-sub:active {
+      transform: translateY(4px);
+      box-shadow:
+        inset 0 3px 0 rgba(255,255,255,1),
+        0 2px 0 #d6c2a1,
+        0 4px 4px rgba(0,0,0,.15);
+    }
+
+    /* 모바일 웹에서는 브라우저 주소창/비율 때문에 메인 메뉴가 더 위로 붙어 보입니다.
+   버튼 크기와 스타일은 유지하고, 메뉴 묶음 위치만 아래로 내려 로고와 겹치지 않게 합니다. */
+    @media (max-width: 480px) {
+      .mainPanel {
+        bottom: max(clamp(30px, 5%, 56px), calc(env(safe-area-inset-bottom) + 14px));
+      }
+
+      .menu-container {
+        margin-bottom: 18px;
+      }
+
+      .btn-main-play {
+        margin-bottom: 14px;
+      }
+
+      .btn-sub {
+        margin-bottom: 11px;
+      }
+
+      .mainSoundControls {
+        margin-top: 8px;
+      }
+    }
+
+    .mainSoundControls { width: 72%; max-width: 256px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px auto 0; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+    .mainSoundControls button { min-height: 34px; height: 34px; margin: 0; padding: 0 7px; border-radius: 12px; border: 1px solid rgba(35,52,80,.12); background: rgba(255,252,235,.9); color: var(--ink); font-size: 12px; font-weight: 800; box-shadow: 0 3px 0 rgba(35,52,80,.12), 0 6px 10px rgba(12,47,86,.10); }
+    .mainSoundControls button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(35,52,80,.10), 0 5px 10px rgba(12,47,86,.08); }
+
+    /* 가로 모드에서는 세로 공간이 극단적으로 부족하므로 메뉴를 압축해 잘림을 방지합니다. */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .mainPanel {
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 18px !important;
+        right: 18px !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .menu-container {
+        margin-bottom: 8px;
+      }
+
+      .btn-main-play {
+        width: 74% !important;
+        max-width: 300px !important;
+        height: 56px !important;
+        min-height: 56px !important;
+        margin-bottom: 8px !important;
+        border-radius: 16px !important;
+        box-shadow: inset 0 4px 0 rgba(255,255,255,.42), 0 5px 0 #a13600, 0 8px 8px rgba(0,0,0,.24) !important;
+      }
+
+      .btn-main-play .text-main {
+        font-size: 23px !important;
+      }
+
+      .btn-sub {
+        width: 66% !important;
+        max-width: 270px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        margin-bottom: 6px !important;
+        border-radius: 14px !important;
+        box-shadow: inset 0 2px 0 rgba(255,255,255,1), 0 4px 0 #d6c2a1, 0 6px 6px rgba(0,0,0,.12) !important;
+      }
+
+      .btn-sub .text-sub {
+        font-size: 16px !important;
+      }
+
+      .mainSoundControls {
+        width: 58%;
+        max-width: 210px;
+        gap: 6px;
+        margin-top: 2px;
+      }
+
+      .mainSoundControls button {
+        height: 28px;
+        min-height: 28px;
+        font-size: 10px;
+      }
+    }
+
+    .infoPanel { max-height: calc(100% - 42px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .infoList { text-align: left; margin: 14px 0 18px; }
+    .infoList p { margin: 10px 0; padding: 10px 12px; background: rgba(255,255,255,.46); border: 1px solid var(--line); border-radius: 16px; }
+    .tutorialImage { display: block; width: 100%; max-height: 66vh; object-fit: contain; margin: 8px auto 14px; border-radius: 18px; box-shadow: 0 10px 24px rgba(0,0,0,.14); }
+    /* 💡 팝업창 내부 버튼 */
+    .guideButtons { display: flex; flex-direction: column; gap: 5px; margin: -7px 0 0px 0; align-items: center; transform: translateY(-6px);}
+    .guideButtons button,.guideButtons a {  margin-top: 3;}
+
+    /* 팝업 공통 버튼 베이스 (가로폭 줄이고 입체감 업) */
+    .guideButtons button,
+    .backMenuBtn { display: flex; align-items: center;
+      justify-content: center;
+      width: 78%;              /* 박스 안에서 답답하지 않게 너비 축소 */
+      max-width: 260px;
+      min-height: 0;
+      height: 50px;            /* 세로 볼륨 단정하게 통일 */
+      border: none; 
+      border-radius: 16px; 
+      font-size: 20px;         /* 글씨 크기 시원하게 확대 */
+      font-weight: 900; 
+      cursor: pointer;
+      position: relative;
+      transition: all .05s ease-in-out;
+    }
+
+    /* 1, 2번 영상 버튼: 메인 화면의 찰진 3D 오렌지 젤리로 통일 */
+    .guideButtons button:first-child,
+    .guideButtons button:nth-child(2) { 
+      background: linear-gradient(to bottom, #ffa73b 0%, #ff5d00 100%); 
+      color: #ffffff; 
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,.65),
+        0 5px 0 #a13600,
+        0 7px 8px rgba(0,0,0,.16);
+    }
+
+    /* 3번 버튼: 메인으로 돌아가기 (힘 빼고 단정한 크림색 조연 배치) */
+    .backMenuBtn { 
+      width: 75% !important;   /* 취소 버튼이니까 더 좁게 */
+      height: 46px !important; /* 높이도 살짝 낮게 */
+      margin: 18px auto 0 auto;
+      background: linear-gradient(to bottom, #ffffff 0%, #fff4e0 100%); 
+      color: #4a341e; 
+      font-size: 17px;
+      font-weight: 800;
+      -webkit-text-stroke: 0;
+      text-shadow: 0 1px 0 #ffffff;
+      box-shadow: 
+        inset 0 3px 0 rgba(255,255,255,1),
+        0 5px 0 #d6c2a1,
+        0 8px 6px rgba(0,0,0,.12);
+    }
+
+    /* 누를 때 쏙 들어가는 찰진 손맛 피드백 */
+    .guideButtons button:first-child:active,
+    .guideButtons button:nth-child(2):active {
+      transform: translateY(4px);
+      box-shadow: inset 0 4px 0 rgba(255,255,255,.35), 0 2px 0 #a13600, 0 4px 4px rgba(0,0,0,.2);
+    }
+
+    .backMenuBtn:active {
+      transform: translateY(3px);
+      box-shadow: inset 0 3px 0 rgba(255,255,255,1), 0 2px 0 #d6c2a1, 0 4px 4px rgba(0,0,0,.12);
+    }
+    .gameOverActions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    #saveScoreBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 58px;
+      min-height: 0;
+      margin-top: 16px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(to bottom, #ffa73b 0%, #ff5d00 100%);
+      color: #ffffff;
+      font-size: 22px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow:
+        inset 0 4px 0 rgba(255, 255, 255, .45),
+        0 6px 0 #a13600,
+        0 10px 8px rgba(0, 0, 0, .2);
+      transition: all .05s ease-in-out;
+    }
+    #restartBtn,
+    #gameOverMainBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 50px;
+      min-height: 0;
+      margin: 0;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(to bottom, #ffffff 0%, #fff4e0 100%);
+      color: #4a341e;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow:
+        inset 0 3px 0 rgba(255, 255, 255, 1),
+        0 5px 0 #d6c2a1,
+        0 8px 6px rgba(0, 0, 0, .12);
+      transition: all .05s ease-in-out;
+    }
+    #saveScoreBtn:active {
+      transform: translateY(4px);
+      box-shadow:
+        inset 0 4px 0 rgba(255, 255, 255, .35),
+        0 2px 0 #a13600,
+        0 4px 4px rgba(0, 0, 0, .2);
+    }
+    #restartBtn:active,
+    #gameOverMainBtn:active {
+      transform: translateY(3px);
+      box-shadow:
+        inset 0 3px 0 rgba(255, 255, 255, 1),
+        0 2px 0 #d6c2a1,
+        0 4px 4px rgba(0, 0, 0, .12);
+    }
+    .choiceBtn { background: #ffffff; color: var(--ink); box-shadow: var(--soft-shadow); border: 1px solid var(--line); border-radius: 16px; text-align: center; margin-top: 10px; font-weight: 800; font-size: 18px; }
+    input {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px;
+      border: 2px solid #e6d5bc;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 15px;
+      margin-top: 10px;
+      background: #fffbf2;
+      color: #22314a;
+      box-shadow:
+        inset 0 3px 5px rgba(186, 137, 69, .15),
+        0 1px 0 #ffffff;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus { border-color: #ff9f1c; }
+    input::placeholder { color: #a3947f; }
+    .choiceBtn:active, button:active { transform: translateY(1px); box-shadow: 0 5px 14px rgba(21,37,67,.13); filter: brightness(.99); }
+
+#rankingBox { text-align: left; margin: 14px 0; padding: 12px; background: rgba(255,255,255,.5); border: 1px solid var(--line); border-radius: 16px; font-weight: 900; line-height: 1.55; font-size: 14px; }
+.rankingList { text-align: left; margin: 14px 0; padding: 12px; background: rgba(255,255,255,.5); border: 1px solid var(--line); border-radius: 16px; font-weight: 900; line-height: 1.55; font-size: 14px; }
+.rankingTitle { margin-bottom: 8px; font-size: 13px; font-weight: 700; color: var(--ink); }
+.rankingTable { width: 100%; border-collapse: separate; border-spacing: 0; overflow: hidden; border: none; border-radius: 12px; background: rgba(255,252,240,.6); font-size: 12.5px; line-height: 1.35; table-layout: fixed; }
+.rankingTable th, .rankingTable td { padding: 8px 7px; border-bottom: 1px solid rgba(186,137,69,.12); color: var(--ink); }
+.rankingTable th { background: #fff0b3; font-weight: 800; color: #3f2f1d; border-bottom: 2px solid #ebdcb9; }
+.rankingTable td { font-weight: 700; }
+.rankingTable tr:last-child td { border-bottom: 0; }
+.rankingTable tbody tr:first-child td { color: #ff6b00; font-weight: 900; }
+.rankingTable th:first-child, .rankingTable td:first-child { width: 48px; text-align: center; white-space: nowrap; }
+.rankingTable th:nth-child(2), .rankingTable td:nth-child(2) { text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rankingTable th:last-child, .rankingTable td:last-child { width: 64px; text-align: right; white-space: nowrap; }
+
+#gameOverOverlay .panel { max-width: 340px; padding: 24px 22px 22px; border-radius: 26px; }
+#gameOverOverlay .panel h2 { margin-bottom: 20px; min-height: 36px; padding: 7px 16px; font-size: 25px; font-weight: 900; animation: gameOverTitlePop .22s ease-out both; }
+@keyframes gameOverTitlePop { from { transform: scale(.92); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+#finalText { display: grid; gap: 4px; margin: 2px 0 10px; text-align: center; }
+.resultLabel { font-size: 18px; font-weight: 800; color: #334155; }
+.resultScore {
+  font-size: 64px;
+  font-weight: 900;
+  color: #ff8a00;
+  line-height: 1;
+  margin: 8px 0 14px;
+  text-shadow: 0 2px 0 rgba(255,255,255,.6);
+}
+.resultTime { font-size: 21px; font-weight: 800; color: #3b3127; }
+#gameOverOverlay #rankingBox { margin: 10px 0; padding: 9px; background: rgba(255,255,255,.46); border-color: rgba(34,49,74,.10); border-radius: 15px; box-shadow: inset 0 1px 0 rgba(255,255,255,.55); }
+#gameOverOverlay .rankingTitle { margin-bottom: 6px; font-size: 12.5px; }
+#gameOverOverlay .rankingTable { border: none; border-radius: 11px; background: rgba(255,252,240,.6); font-size: 12px; }
+#gameOverOverlay .rankingTable th, #gameOverOverlay .rankingTable td { padding: 6px 6px; border-bottom-color: rgba(186,137,69,.12); }
+#gameOverOverlay .rankingTable th { background: #fff0b3; color: #3f2f1d; border-bottom: 2px solid #ebdcb9; font-weight: 800; }
+#gameOverOverlay input { height: 48px; padding: 0 16px; margin-top: 10px; background: #fffbf2; border: 2px solid #e6d5bc; border-radius: 14px; box-shadow: inset 0 3px 5px rgba(186,137,69,.15), 0 1px 0 #ffffff; }
+#gameOverOverlay input:focus { border-color: #ff9f1c; }
+#gameOverOverlay input::placeholder { color: #a3947f; }
+#gameOverOverlay #saveScoreBtn { height: 58px; min-height: 0; margin-top: 16px; border: 0; border-radius: 16px; font-size: 22px; font-weight: 900; background: linear-gradient(to bottom, #ffa73b 0%, #ff5d00 100%); box-shadow: inset 0 4px 0 rgba(255,255,255,.45), 0 6px 0 #a13600, 0 10px 8px rgba(0,0,0,.2); }
+#gameOverOverlay .gameOverActions { gap: 10px; margin-top: 12px; }
+#gameOverOverlay #restartBtn,
+#gameOverOverlay #gameOverMainBtn { height: 50px; min-height: 0; margin-top: 0; border: 0; border-radius: 14px; font-size: 18px; font-weight: 800; background: linear-gradient(to bottom, #ffffff 0%, #fff4e0 100%); color: #4a341e; box-shadow: inset 0 3px 0 rgba(255,255,255,1), 0 5px 0 #d6c2a1, 0 8px 6px rgba(0,0,0,.12); }
+#gameOverOverlay #saveScoreBtn:active { transform: translateY(4px); box-shadow: inset 0 4px 0 rgba(255,255,255,.35), 0 2px 0 #a13600, 0 4px 4px rgba(0,0,0,.2); }
+#gameOverOverlay #restartBtn:active,
+#gameOverOverlay #gameOverMainBtn:active { transform: translateY(3px); box-shadow: inset 0 3px 0 rgba(255,255,255,1), 0 2px 0 #d6c2a1, 0 4px 4px rgba(0,0,0,.12); }
+/* 모바일 웹 브라우저에서는 주소창/하단바 때문에 실제 세로 공간이 줄어듭니다.
+   Game Over 팝업만 10~15% 정도 압축해서 하단 버튼이 잘리지 않도록 조정합니다. */
+@media (max-width: 480px) {
+  #gameOverOverlay {
+    padding: 12px 16px;
+    align-items: center;
+  }
+
+  #gameOverOverlay .panel {
+    max-width: 316px;
+    max-height: calc(100% - 18px);
+    padding: 18px 18px 16px;
+    border-radius: 24px;
+    overflow: visible;
+  }
+
+  #gameOverOverlay .panel h2 {
+    min-height: 30px;
+    margin-bottom: 12px;
+    padding: 4px 14px;
+    font-size: 22px;
+  }
+
+  #finalText {
+    gap: 2px;
+    margin: 0 0 7px;
+  }
+
+  .resultLabel { font-size: 15px; }
+
+  .resultScore {
+    font-size: 54px;
+    margin: 4px 0 8px;
+  }
+
+  .resultTime { font-size: 17px; }
+
+  #gameOverOverlay #rankingBox {
+    margin: 7px 0;
+    padding: 7px;
+    border-radius: 13px;
+  }
+
+  #gameOverOverlay .rankingTitle {
+    margin-bottom: 4px;
+    font-size: 11.5px;
+  }
+
+  #gameOverOverlay .rankingTable {
+    font-size: 11px;
+    border-radius: 10px;
+  }
+
+  #gameOverOverlay .rankingTable th,
+  #gameOverOverlay .rankingTable td {
+    padding: 4px 5px;
+    line-height: 1.22;
+  }
+
+  #gameOverOverlay input {
+    height: 40px;
+    padding: 0 12px;
+    margin-top: 7px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  #gameOverOverlay #saveScoreBtn {
+    height: 48px;
+    margin-top: 10px;
+    border-radius: 14px;
+    font-size: 18px;
+    box-shadow: inset 0 3px 0 rgba(255,255,255,.45), 0 5px 0 #a13600, 0 8px 7px rgba(0,0,0,.18);
+  }
+
+  #gameOverOverlay .gameOverActions {
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  #gameOverOverlay #restartBtn,
+  #gameOverOverlay #gameOverMainBtn {
+    height: 42px;
+    border-radius: 12px;
+    font-size: 15px;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,1), 0 4px 0 #d6c2a1, 0 6px 5px rgba(0,0,0,.10);
+  }
+}

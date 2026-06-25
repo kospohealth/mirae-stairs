@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>미래 폭염계단</title>
+  <link rel="preload" as="image" href="assets/main_background.png" fetchpriority="high" />
+  <link rel="preload" as="image" href="assets/bg_stage1.png" />
+  <link rel="preload" as="image" href="assets/bg_stage2.png" />
+  <link rel="preload" as="image" href="assets/bg_stage3.png" />
+  <link rel="preload" as="image" href="assets/mirae.png" />
+  <link rel="preload" as="image" href="assets/sun.png" />
+  <script>
+    function loadSupabaseFallback() {
+      var script = document.createElement("script");
+      script.async = true;
+      script.src = "https://unpkg.com/@supabase/supabase-js@2";
+      document.head.appendChild(script);
+    }
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="loadSupabaseFallback()"></script>
+  <link rel="stylesheet" href="style.css?v=20260625-qa3" />
+  <style>
+    /* QR 첫 진입에서 외부 CSS가 늦게 잡혀도 메인 버튼 크기가 작아지지 않도록 고정 */
+    #startOverlay .mainPanel {
+      left: 24px !important;
+      right: 24px !important;
+      max-width: 336px !important;
+      margin: 0 auto !important;
+    }
+
+    #startOverlay .menuButtons {
+      display: grid !important;
+      gap: 0 !important;
+      width: 100% !important;
+    }
+
+    #startOverlay .btn-main-play {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 88% !important;
+      max-width: 360px !important;
+      height: 82px !important;
+      min-height: 82px !important;
+      margin: 0 auto 15px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 20px !important;
+      background: linear-gradient(to bottom, #ffa73b 0%, #ff5d00 100%) !important;
+      box-shadow: inset 0 6px 0 rgba(255,255,255,.45), 0 8px 0 #a13600, 0 12px 10px rgba(0,0,0,.3) !important;
+    }
+
+    #startOverlay .btn-main-play .text-main {
+      font-size: 30px !important;
+      line-height: 1 !important;
+      font-weight: 900 !important;
+      color: #fff !important;
+      text-shadow: 0 2px 4px rgba(0,0,0,.28), 0 1px 0 rgba(0,0,0,.2) !important;
+    }
+
+    #startOverlay .btn-sub {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 82% !important;
+      max-width: 340px !important;
+      height: 60px !important;
+      min-height: 60px !important;
+      margin: 0 auto 14px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 18px !important;
+      background: linear-gradient(to bottom, #ffffff 0%, #fff4e0 100%) !important;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,1), inset 0 -3px 0 rgba(0,0,0,.05), 0 6px 0 #d6c2a1, 0 10px 8px rgba(0,0,0,.15) !important;
+    }
+
+    #startOverlay .btn-sub .text-sub {
+      font-size: 20px !important;
+      line-height: 1 !important;
+      font-weight: 800 !important;
+      color: #4a341e !important;
+    }
+
+    @media (orientation: landscape) and (max-height: 500px) {
+      #startOverlay .mainPanel {
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 18px !important;
+        right: 18px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        overflow-y: auto !important;
+      }
+
+      #startOverlay .btn-main-play {
+        width: 74% !important;
+        max-width: 300px !important;
+        height: 56px !important;
+        min-height: 56px !important;
+        margin-bottom: 8px !important;
+      }
+
+      #startOverlay .btn-main-play .text-main {
+        font-size: 23px !important;
+      }
+
+      #startOverlay .btn-sub {
+        width: 66% !important;
+        max-width: 270px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        margin-bottom: 6px !important;
+      }
+
+      #startOverlay .btn-sub .text-sub {
+        font-size: 16px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="gameWrap" class="stage-ground">
+    <div id="loadingOverlay" aria-live="polite">
+      <div class="loadingBox">
+        <div class="loadingTitle">미래의 계단</div>
+        <div class="loadingText">불러오는 중...</div>
+        <div class="loadingBar" aria-hidden="true"><span></span></div>
+      </div>
+    </div>
+    <div id="bgLayerA" class="bgLayer active" aria-hidden="true"></div>
+    <div id="bgLayerB" class="bgLayer" aria-hidden="true"></div>
+    <div id="decorLayer"></div>
+    <div id="hud">
+      <div class="hudMetric scoreMetric"><span class="hudIcon">☀</span><span id="score">0</span></div>
+      <div class="hudMetric timeMetric"><span class="hudIcon">⏱</span><span id="time">0</span><span class="hudUnit">s</span></div>
+      <div class="hudMetric boosterMetric" id="boosterText">⚡ x0</div>
+      <div id="soundControls">
+        <button id="bgmToggle" class="soundBtn" type="button" aria-label="BGM">🎵</button>
+        <button id="sfxToggle" class="soundBtn" type="button" aria-label="효과음">🔔</button>
+        <button id="pauseBtn" class="soundBtn pauseBtn hidden" type="button" aria-label="일시정지">⏸</button>
+      </div>
+    </div>
+    <div id="gameArea">
+      <div id="world"></div>
+      <div id="player" role="img" aria-label="미래 캐릭터"></div>
+    </div>
+    <div id="directionGuide" aria-hidden="true">
+      <div class="guideKey leftKey">◀</div>
+      <div class="guideKey rightKey">▶</div>
+    </div>
+    <div id="touchGuide">왼쪽 / 오른쪽 화면 터치!</div>
+    <div id="timerBarWrap"><div id="timerBar"></div></div>
+    <div id="toast" class="hidden"></div>
+
+    <div id="startOverlay" class="overlay mainOverlay">
+      <img class="mainSun" src="assets/sun.png" alt="" aria-hidden="true" />
+      <div class="panel mainPanel">
+        <h1>미래 폭염계단</h1>
+        <p>미래와 함께 폭염 안전수칙을 익히고 건강계단을 올라가요.</p>
+        <div class="menuButtons menu-container">
+          <button id="startBtn" class="btn-main-play" type="button"><span class="text-main">플레이하기</span></button>
+          <button id="tutorialBtn" class="btn-sub" type="button"><span class="text-sub">게임방법</span></button>
+          <button id="guideBtn" class="btn-sub" type="button"><span class="text-sub">폭염수칙</span></button>
+          <button id="rankingBtn" class="btn-sub" type="button"><span class="text-sub">랭킹보기</span></button>
+        </div>
+        <div class="mainSoundControls">
+          <button id="mainBgmToggle" type="button">🎵 BGM ON</button>
+          <button id="mainSfxToggle" type="button">🔔 효과음 ON</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="tutorialOverlay" class="overlay hidden">
+      <div class="panel infoPanel">
+        <h2>튜토리얼</h2>
+        <img class="tutorialImage" src="assets/tutorial_1.png" alt="화면을 터치해서 계단을 올라가는 방법" />
+        <button class="backMenuBtn" type="button">메인으로 돌아가기</button>
+      </div>
+    </div>
+
+    <div id="guideOverlay" class="overlay hidden">
+      <div class="panel infoPanel">
+        <h2>폭염수칙</h2>
+        <p>아래 버튼을 누르면 영상으로 연결됩니다.</p>
+        <div class="guideButtons">
+          <button id="rulesBtn" type="button">폭염예방수칙</button>
+          <button id="kitBtn" type="button">폭염응급키트</button>
+        </div>
+        <button class="backMenuBtn" type="button">메인으로 돌아가기</button>
+      </div>
+    </div>
+
+    <div id="rankingOverlay" class="overlay hidden">
+      <div class="panel infoPanel">
+        <h2>현재 랭킹</h2>
+        <div id="mainRankingBox" class="rankingList">🏆 랭킹 불러오는 중...</div>
+        <button class="backMenuBtn" type="button">메인으로 돌아가기</button>
+      </div>
+    </div>
+
+    <div id="quizOverlay" class="overlay hidden">
+      <div class="panel">
+        <h2 id="quizTitle">폭염 퀴즈</h2>
+        <p id="quizQuestion"></p>
+        <div id="choices"></div>
+      </div>
+    </div>
+
+    <div id="pauseOverlay" class="overlay hidden">
+      <div class="panel pausePanel">
+        <h2>PAUSED</h2>
+        <div class="pauseScoreBox">
+          <span>현재 점수</span>
+          <strong id="pauseScore">0점</strong>
+        </div>
+        <div class="pauseSoundControls">
+          <button id="pauseBgmToggle" type="button">🎵 BGM ON</button>
+          <button id="pauseSfxToggle" type="button">🔔 효과음 ON</button>
+        </div>
+        <button id="resumeBtn" class="pauseActionBtn resumeBtn" type="button">계속하기</button>
+        <button id="pauseMainBtn" class="pauseActionBtn pauseMainBtn" type="button">메인화면</button>
+      </div>
+    </div>
+
+    <div id="gameOverOverlay" class="overlay hidden">
+      <div class="panel">
+        <h2>GAME OVER</h2>
+        <p id="finalText"></p>
+        <div id="rankingBox">🏆 랭킹 준비 중...</div>
+        <input id="nicknameInput" maxlength="8" placeholder="닉네임(랭킹 공개)" />
+        <input id="employeeInput" maxlength="12" placeholder="사번(관리자 확인용/비공개)" />
+        <button id="saveScoreBtn" type="button">기록하기</button>
+        <div class="gameOverActions">
+          <button id="restartBtn" type="button">재도전</button>
+          <button id="gameOverMainBtn" type="button">메인화면</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script defer src="script.js?v=20260625-qa3"></script>
+</body>
+</html>
