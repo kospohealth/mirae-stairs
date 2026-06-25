@@ -118,6 +118,7 @@
       var quizMode = "booster";
       var animationId = null;
       var steps = [];
+      var usedQuizIndices = [];
       var playerPos = { x: 0, y: 0 };
       var playerStart = { x: 0, y: 0 };
       var playerTarget = { x: 0, y: 0 };
@@ -138,7 +139,7 @@
       var currentPublicRankingSaved = false;
       var currentAdminSheetSaved = false;
       var currentRecordCreatedAt = "";
-      var STEP_W = 112;
+      var STEP_W = 100;
       var STEP_GAP_X = 76;
       var STEP_GAP_Y = 62;
       var PLAYER_BASE_RATIO = 0.68;
@@ -742,6 +743,7 @@
         var sheetResult = { ok: true, skipped: true };
 
         if (scoreUploadInProgress) { showToast("이미 기록 중이에요!", 1200); return; }
+        if (!navigator.onLine) { showToast("인터넷 연결을 확인해주세요!", 2000); return; }
         if (currentRecordSaved) { showToast("이미 업로드된 기록이에요!", 1300); return; }
         if (!nickname) { showToast("닉네임을 입력해줘!", 1200); return; }
         if (!employeeId) { showToast("사번을 입력해줘!", 1200); return; }
@@ -860,8 +862,15 @@
         boosterText.textContent = "⚡ x0";
         lastBoosterLabel = "⚡ x0";
       }
+      function pickQuiz() {
+        if (usedQuizIndices.length >= quizzes.length) usedQuizIndices = [];
+        var remaining = quizzes.map(function (_, i) { return i; }).filter(function (i) { return usedQuizIndices.indexOf(i) === -1; });
+        var idx = remaining[Math.floor(Math.random() * remaining.length)];
+        usedQuizIndices.push(idx);
+        return quizzes[idx];
+      }
       function openQuiz(mode) {
-        var q = quizzes[Math.floor(Math.random() * quizzes.length)];
+        var q = pickQuiz();
         paused = true;
         quizPausedAt = performance.now();
         updatePauseButtonVisibility();
@@ -1035,7 +1044,6 @@
         updateMovement(now);
         updateTimer(now);
         updateHud();
-        updatePauseButtonVisibility();
       }
 
       function stopOverlayTouch(e) { if (e && e.stopPropagation) e.stopPropagation(); }
@@ -1075,7 +1083,6 @@
         if (Math.abs(width - lastLayoutWidth) < 24 && Math.abs(height - lastLayoutHeight) < 120) return;
         lastLayoutWidth = width;
         lastLayoutHeight = height;
-        generateMap();
         snapToCurrentStep();
       });
 

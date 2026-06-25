@@ -145,6 +145,7 @@
     .sun::before { display: none; }
     .heatText { padding: 8px 10px; background: #ef4444; color: #fff7d6; border: 1px solid rgba(34,49,74,.18); border-radius: 14px; font-weight: 900; font-size: 18px; box-shadow: var(--soft-shadow); }
     .star { width: 10px; height: 10px; background: #fef08a; box-shadow: 22px 24px 0 #e0f2fe, -22px 12px 0 #fff7d6, 44px -8px 0 #fef3c7; }
+    .cloud { width: 72px; height: 28px; background: rgba(255,255,255,.82); border-radius: 999px; box-shadow: 22px -10px 0 16px rgba(255,255,255,.7), 44px 0 0 12px rgba(255,255,255,.6); }
 
     /* ==================================================
        플레이 화면 상단 HUD
@@ -700,13 +701,13 @@
       }
     }
 
-    .infoPanel { max-height: calc(100% - 42px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .infoPanel { max-height: calc(100% - 42px); overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
     .infoList { text-align: left; margin: 14px 0 18px; }
     .infoList p { margin: 10px 0; padding: 10px 12px; background: rgba(255,255,255,.46); border: 1px solid var(--line); border-radius: 16px; }
     .tutorialImage { display: block; width: 100%; max-height: 66vh; object-fit: contain; margin: 8px auto 14px; border-radius: 18px; box-shadow: 0 10px 24px rgba(0,0,0,.14); }
     /* 💡 팝업창 내부 버튼 */
     .guideButtons { display: flex; flex-direction: column; gap: 5px; margin: -7px 0 0px 0; align-items: center; transform: translateY(-6px);}
-    .guideButtons button,.guideButtons a {  margin-top: 3;}
+    .guideButtons button,.guideButtons a {  margin-top: 3px;}
 
     /* 팝업 공통 버튼 베이스 (가로폭 줄이고 입체감 업) */
     .guideButtons button,
@@ -973,4 +974,37 @@
     font-size: 15px;
     box-shadow: inset 0 2px 0 rgba(255,255,255,1), 0 4px 0 #d6c2a1, 0 6px 5px rgba(0,0,0,.10);
   }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  #gameOverOverlay {
+    align-items: flex-start;
+    padding: 6px 14px;
+  }
+  #gameOverOverlay .panel {
+    max-height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    padding: 14px 16px 12px;
+    border-radius: 18px;
+  }
+  #gameOverOverlay .panel h2 {
+    margin-bottom: 8px;
+    padding: 3px 10px;
+    font-size: 18px;
+  }
+  #finalText { gap: 1px; margin: 0 0 5px; }
+  .resultLabel { font-size: 13px; }
+  .resultScore { font-size: 38px; margin: 2px 0 5px; }
+  .resultTime { font-size: 14px; }
+  #gameOverOverlay #rankingBox { margin: 4px 0; padding: 5px; border-radius: 10px; }
+  #gameOverOverlay .rankingTable { font-size: 10.5px; }
+  #gameOverOverlay .rankingTable th,
+  #gameOverOverlay .rankingTable td { padding: 3px 4px; }
+  #gameOverOverlay input { height: 36px; margin-top: 5px; font-size: 12px; }
+  #gameOverOverlay #saveScoreBtn { height: 40px; margin-top: 7px; font-size: 16px; }
+  #gameOverOverlay .gameOverActions { gap: 6px; margin-top: 6px; }
+  #gameOverOverlay #restartBtn,
+  #gameOverOverlay #gameOverMainBtn { height: 36px; font-size: 13px; }
 }
