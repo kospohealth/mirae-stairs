@@ -878,7 +878,17 @@
           btn.textContent = String(index + 1) + ". " + choice;
           btn.addEventListener("click", function (event) {
             event.stopPropagation();
-            answerQuiz(index === q.answer);
+            var correct = index === q.answer;
+            // 중복 클릭 방지: 모든 버튼 즉시 비활성화
+            choices.querySelectorAll(".choiceBtn").forEach(function (b) { b.disabled = true; });
+            // 내가 선택한 버튼 색 표시
+            btn.classList.add(correct ? "choiceCorrect" : "choiceWrong");
+            // 오답이면 정답 버튼도 함께 강조
+            if (!correct) {
+              choices.querySelectorAll(".choiceBtn")[q.answer].classList.add("choiceCorrect");
+            }
+            // 정답: 0.4초, 오답: 0.7초 후 진행 (정답 위치 인지 시간 확보)
+            setTimeout(function () { answerQuiz(correct); }, correct ? 400 : 700);
           });
           choices.appendChild(btn);
         });
