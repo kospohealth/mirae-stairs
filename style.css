@@ -637,7 +637,23 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       }
     }
 
-    .mainSoundControls { width: 72%; max-width: 256px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px auto 0; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+    .icedayBanner {
+  margin: 10px auto 0;
+  padding: 7px 16px;
+  width: fit-content;
+  max-width: 90%;
+  background: rgba(255, 240, 160, 0.92);
+  border: 1px solid rgba(255, 180, 0, 0.45);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #7a4a00;
+  text-align: center;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 6px rgba(200, 120, 0, 0.15);
+}
+
+.mainSoundControls { width: 72%; max-width: 256px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px auto 0; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
     .mainSoundControls button { min-height: 34px; height: 34px; margin: 0; padding: 0 7px; border-radius: 12px; border: 1px solid rgba(35,52,80,.12); background: rgba(255,252,235,.9); color: var(--ink); font-size: 12px; font-weight: 800; box-shadow: 0 3px 0 rgba(35,52,80,.12), 0 6px 10px rgba(12,47,86,.10); }
     .mainSoundControls button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(35,52,80,.10), 0 5px 10px rgba(12,47,86,.08); }
 
@@ -867,6 +883,8 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 @keyframes gameOverTitlePop { from { transform: scale(.92); opacity: .4; } to { transform: scale(1); opacity: 1; } }
 #finalText { display: grid; gap: 4px; margin: 2px 0 10px; text-align: center; }
 .resultLabel { font-size: 18px; font-weight: 800; color: #334155; }
+.resultBest { font-size: 14px; font-weight: 800; color: #64748b; }
+.resultBest.newBest { color: #16a34a; font-size: 15px; }
 .resultScore {
   font-size: 64px;
   font-weight: 900;

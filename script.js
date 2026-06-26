@@ -165,6 +165,15 @@
         }
       }
 
+      function getBestScore() {
+        var v = safeStorageGet("mirae_best");
+        return v ? (parseInt(v, 10) || 0) : 0;
+      }
+
+      function saveBestScore(s) {
+        if (s > getBestScore()) safeStorageSet("mirae_best", String(s));
+      }
+
       var bgmEnabled = safeStorageGet("mirae_bgm") !== "off" && safeStorageGet("bgmEnabled") !== "false";
       var sfxEnabled = safeStorageGet("mirae_sfx") !== "off" && safeStorageGet("sfxEnabled") !== "false";
 
@@ -743,8 +752,8 @@
 
         if (scoreUploadInProgress) { showToast("이미 기록 중이에요!", 1200); return; }
         if (currentRecordSaved) { showToast("이미 업로드된 기록이에요!", 1300); return; }
-        if (!nickname) { showToast("닉네임을 입력해줘!", 1200); return; }
         if (!employeeId) { showToast("사번을 입력해줘!", 1200); return; }
+        if (!nickname) nickname = "익명";
 
         scoreUploadInProgress = true;
         saveScoreBtn.disabled = true;
@@ -945,7 +954,14 @@
         currentRecordSaved = false;
         currentPublicRankingSaved = false;
         currentAdminSheetSaved = false;
-        finalText.innerHTML = '<span class="resultLabel">최종 점수</span><strong class="resultScore">' + Math.floor(score) + '점</strong><span class="resultTime">생존 시간 ' + seconds + '초</span>';
+        var finalScore = Math.floor(score);
+        var prevBest = getBestScore();
+        var isNewBest = finalScore > prevBest;
+        saveBestScore(finalScore);
+        var bestLine = isNewBest
+          ? '<span class="resultBest newBest">🎉 최고 기록 갱신!</span>'
+          : (prevBest > 0 ? '<span class="resultBest">최고 기록 ' + prevBest + '점</span>' : '');
+        finalText.innerHTML = '<span class="resultLabel">최종 점수</span><strong class="resultScore">' + finalScore + '점</strong>' + bestLine + '<span class="resultTime">생존 시간 ' + seconds + '초</span>';
         nicknameInput.value = "";
         employeeInput.value = "";
         saveScoreBtn.disabled = false;
