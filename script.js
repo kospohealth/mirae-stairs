@@ -287,7 +287,7 @@
             }
 
             tries += 1;
-            if (tries >= 20) {
+            if (tries >= 50) { // 100ms × 50 = 5초 대기 (기존 2초에서 연장)
               resolve(false);
               return;
             }
@@ -297,6 +297,15 @@
 
           check();
         });
+      }
+
+      function withTimeout(promise, ms) {
+        return Promise.race([
+          promise,
+          new Promise(function (_, reject) {
+            setTimeout(function () { reject(new Error("timeout")); }, ms);
+          })
+        ]);
       }
       function isGoogleSheetsReady() { return GOOGLE_SHEETS_WEBAPP_URL.indexOf("여기에_") === -1; }
       function escapeHtml(text) {
@@ -665,12 +674,21 @@
           return;
         }
         box.innerHTML = "🏆 랭킹 불러오는 중...";
-        result = await supabaseClient
-          .from("scores")
-          .select("nickname, score, created_at")
-          .order("score", { ascending: false })
-          .order("created_at", { ascending: true })
-          .limit(5);
+        try {
+          result = await withTimeout(
+            supabaseClient
+              .from("scores")
+              .select("nickname, score, created_at")
+              .order("score", { ascending: false })
+              .order("created_at", { ascending: true })
+              .limit(5),
+            8000 // 8초 타임아웃
+          );
+        } catch (err) {
+          console.error("랭킹 로드 오류:", err);
+          box.innerHTML = "🏆 랭킹을 불러오지 못했어요";
+          return;
+        }
         if (result.error) {
           console.error(result.error);
           box.innerHTML = "🏆 랭킹 불러오기 실패";
@@ -690,16 +708,26 @@
 
       async function savePublicRanking(nickname, finalScore) {
         if (!(await waitForSupabaseReady())) return { ok: false, skipped: true };
-        var result = await supabaseClient.from("scores").insert([{ nickname: nickname, score: finalScore }]);
-        if (result.error) {
-          console.error(result.error);
+        try {
+          var result = await withTimeout(
+            supabaseClient.from("scores").insert([{ nickname: nickname, score: finalScore }]),
+            10000 // 10초 타임아웃
+          );
+          if (result.error) {
+            console.error(result.error);
+            return { ok: false };
+          }
+          return { ok: true };
+        } catch (err) {
+          console.error("Supabase 저장 오류:", err);
           return { ok: false };
         }
-        return { ok: true };
       }
 
       async function saveAdminSheet(nickname, employeeId, finalScore, survivalSeconds, createdAt) {
         if (!isGoogleSheetsReady()) return { ok: false, skipped: true };
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function () { controller.abort(); }, 10000); // 10초 타임아웃
         try {
           await fetch(GOOGLE_SHEETS_WEBAPP_URL, {
             method: "POST",
@@ -712,11 +740,18 @@
               survival_seconds: survivalSeconds,
               game: "미래 폭염계단",
               created_at: createdAt
-            })
+            }),
+            signal: controller.signal
           });
+          clearTimeout(timeoutId);
           return { ok: true };
         } catch (err) {
-          console.error(err);
+          clearTimeout(timeoutId);
+          if (err.name === "AbortError") {
+            console.error("Google Sheets 저장 타임아웃");
+          } else {
+            console.error("Google Sheets 저장 오류:", err);
+          }
           return { ok: false };
         }
       }
@@ -748,10 +783,10 @@
         }
 
         if ((!publicResult.ok && !publicResult.skipped) || (!sheetResult.ok && !sheetResult.skipped)) {
-          showToast("저장 실패!", 1400);
+          showToast("저장 실패! 다시 눌러주세요", 2000);
           scoreUploadInProgress = false;
           saveScoreBtn.disabled = false;
-          saveScoreBtn.textContent = "기록하기";
+          saveScoreBtn.textContent = "다시 기록하기";
           return;
         }
         if (publicResult.skipped && sheetResult.skipped) {
