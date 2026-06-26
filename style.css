@@ -159,7 +159,7 @@
       left: 50%;                 /* 가운데 정렬을 위해 50% 지점으로 이동 */
       z-index: 45;
       display: grid;
-      grid-template-columns: auto auto auto auto;
+      grid-template-columns: auto auto auto;
       align-items: center;
       gap: 6px;                  /* HUD 내부 큰 덩어리 사이 간격 */
       width: calc(100% - 10px);  /* 바깥 캡슐 폭. 값이 작을수록 더 넓어집니다. */
@@ -210,21 +210,6 @@
       text-shadow: 0 1px 0 rgba(255,255,255,.35);
     }
     .hudUnit { font-size: 16px; font-weight: 900; color: #4a341e; }
-
-    /* 부스터 칸: 기본은 x0, 활성화되면 JS에서 짧은 상태 문구로 바뀝니다. */
-    #boosterText {
-      min-width: 64px;
-      max-width: 94px;
-      color: #4a341e;
-      font-size: 18px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    #boosterText.active {
-      background: rgba(255,229,116,.42);
-      border-color: rgba(239,124,30,.25);
-      color: #3f2f1d;
-    }
 
     /* 오른쪽 아이콘 버튼 묶음: BGM / 효과음 / 일시정지 */
     #soundControls {
@@ -287,11 +272,6 @@
       .scoreMetric { min-width: 94px; }
       .timeMetric { min-width: 82px; }
       #score, #time { font-size: 20px; }
-      #boosterText {
-        min-width: 56px;
-        max-width: 72px;
-        font-size: 16px;
-      }
       #soundControls { gap: 4px; }
       .soundBtn {
         width: 34px;
@@ -309,11 +289,6 @@
       .scoreMetric { min-width: 86px; }
       .timeMetric { min-width: 74px; }
       #score, #time { font-size: 19px; }
-      #boosterText {
-        min-width: 50px;
-        max-width: 62px;
-        font-size: 15px;
-      }
       .soundBtn {
         width: 32px;
         height: 32px;

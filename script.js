@@ -59,7 +59,6 @@
       var player = document.getElementById("player");
       var scoreEl = document.getElementById("score");
       var timeEl = document.getElementById("time");
-      var boosterText = document.getElementById("boosterText");
       var toast = document.getElementById("toast");
       var timerBar = document.getElementById("timerBar");
       var startOverlay = document.getElementById("startOverlay");
@@ -111,8 +110,6 @@
       var cameraY = 0;
       var targetCameraY = 0;
       var revived = false;
-      var booster = null;
-      var boosterUntil = 0;
       var gameStartTime = 0;
       var lastQuizSecond = -1;
       var quizMode = "booster";
@@ -128,7 +125,6 @@
       var currentStepEl = null;
       var lastHudScore = "";
       var lastHudTime = "";
-      var lastBoosterLabel = "";
       var currentStage = "ground";
       var activeBgLayer = "A";
       var lastLayoutWidth = 0;
@@ -330,13 +326,6 @@
         if (lastHudTime !== timeText) {
           timeEl.textContent = timeText;
           lastHudTime = timeText;
-        }
-        if (!booster) {
-          if (lastBoosterLabel !== "⚡ x0") {
-            boosterText.classList.remove("active");
-            boosterText.textContent = "⚡ x0";
-            lastBoosterLabel = "⚡ x0";
-          }
         }
       }
 
@@ -557,7 +546,6 @@
       }
       function getStepTimeLimit() {
         var limit = BASE_STEP_TIME - Math.min(1300, score * 7);
-        if (booster === "slow") limit += 1100;
         return Math.max(1600, limit);
       }
       function resetDeadline() { stepDeadline = performance.now() + getStepTimeLimit(); }
@@ -566,7 +554,6 @@
         if (!duration || duration <= 0) return;
         gameStartTime += duration;
         stepDeadline += duration;
-        if (boosterUntil > 0) boosterUntil += duration;
         if (moving) moveStartTime += duration;
       }
 
@@ -794,8 +781,6 @@
         score = 0;
         seconds = 0;
         revived = false;
-        booster = null;
-        boosterUntil = 0;
         gameStartTime = performance.now();
         lastQuizSecond = -1;
         currentIndex = 0;
@@ -808,7 +793,6 @@
         setGameWrapStageClass("ground");
         setStageBackground("ground", true);
         renderDecor("ground");
-        player.classList.remove("invincible");
         timerBar.style.transform = "scaleX(1)";
         generateMap();
         snapToCurrentStep();
@@ -839,28 +823,10 @@
       }
 
       function applyBooster() {
-        var types = ["shield", "slow", "double"];
-        booster = types[Math.floor(Math.random() * types.length)];
-        boosterUntil = performance.now() + 5000;
-        if (booster === "shield") {
-          player.classList.add("invincible");
-          playSfx(quizSound);
-          showToast("정답! 실수방어 5초");
-        } else if (booster === "slow") {
-          playSfx(quizSound);
-          showToast("정답! 시간 여유 5초");
-        } else {
-          playSfx(quizSound);
-          showToast("정답! 점수 2배 5초");
-        }
-      }
-      function clearBooster() {
-        booster = null;
-        boosterUntil = 0;
-        player.classList.remove("invincible");
-        boosterText.classList.remove("active");
-        boosterText.textContent = "⚡ x0";
-        lastBoosterLabel = "⚡ x0";
+        score += 10;
+        playSfx(quizSound);
+        showToast("정답! +10점", 1200);
+        updateHud();
       }
       function pickQuiz() {
         if (usedQuizIndices.length >= quizzes.length) usedQuizIndices = [];
@@ -959,32 +925,12 @@
         }
         return false;
       }
-      function updateBooster(now) {
-        var remain;
-        var label;
-        if (!booster) return;
-        remain = Math.max(0, Math.ceil((boosterUntil - now) / 1000));
-        label = booster === "shield" ? "🛡 " : booster === "slow" ? "⏳ " : "⚡ x2 ";
-        label = label + remain + "s";
-        if (lastBoosterLabel !== label) {
-          boosterText.classList.add("active");
-          boosterText.textContent = label;
-          lastBoosterLabel = label;
-        }
-        if (now >= boosterUntil) clearBooster();
-      }
       function beginMoveToNext(direction) {
         var expected = getNextDirection();
         var nxt = nextStep();
         var cur = currentStep();
         if (!running || paused || inputLocked || moving || !nxt || !cur) return;
         if (direction !== expected) {
-          if (booster === "shield") {
-            clearBooster();
-            showToast("실수 방어!", 900);
-            resetDeadline();
-            return;
-          }
           gameOver("방향 실수!");
           return;
         }
@@ -997,7 +943,7 @@
         playerTarget.x = nxt.x;
         playerTarget.y = nxt.y;
         currentIndex += 1;
-        score += booster === "double" ? 2 : 1;
+        score += 1;
         targetCameraY = wrapH() * PLAYER_BASE_RATIO - nxt.y;
         resetDeadline();
         markCurrent();
@@ -1040,7 +986,6 @@
         if (paused) return;
         seconds = Math.floor((now - gameStartTime) / 1000);
         if (handleTimedQuiz()) return;
-        updateBooster(now);
         updateMovement(now);
         updateTimer(now);
         updateHud();
