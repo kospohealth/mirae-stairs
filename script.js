@@ -832,7 +832,8 @@
           animationId = requestAnimationFrame(loop);
         } catch (err) {
           console.error("게임 시작 오류:", err);
-          alert("게임 시작 중 오류가 났어요. 콘솔 오류를 확인해줘!\n" + err.message);
+          showToast("게임을 시작할 수 없어요. 페이지를 새로고침 해주세요.", 3500);
+          startOverlay.classList.remove("hidden");
         }
       }
 
@@ -1075,7 +1076,13 @@
         if (Math.abs(width - lastLayoutWidth) < 24 && Math.abs(height - lastLayoutHeight) < 120) return;
         lastLayoutWidth = width;
         lastLayoutHeight = height;
+        var savedIndex = currentIndex;
         generateMap();
+        // generateMap이 steps[]를 0~119로 초기화하므로, savedIndex가 범위를 벗어나면 추가 생성합니다.
+        while (steps.length <= savedIndex + 45) {
+          appendNextStep(steps.length);
+        }
+        currentIndex = savedIndex;
         snapToCurrentStep();
       });
 
