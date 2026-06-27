@@ -904,14 +904,13 @@
       }
       function openQuiz(mode) {
         var q = getNextQuiz();
-        var expEl = document.getElementById("quizExplanation");
         paused = true;
         quizPausedAt = performance.now();
         updatePauseButtonVisibility();
         quizMode = mode;
         quizOverlay.classList.remove("hidden");
         choices.innerHTML = "";
-        if (expEl) { expEl.textContent = ""; expEl.classList.add("hidden"); }
+
         quizTitle.textContent = mode === "revive" ? "부활 폭염퀴즈" : "보너스 폭염퀴즈";
         quizQuestion.textContent = q.question;
         q.choices.forEach(function (choice, index) {
@@ -926,10 +925,6 @@
             btn.classList.add(correct ? "choiceCorrect" : "choiceWrong");
             if (!correct) {
               choices.querySelectorAll(".choiceBtn")[q.answer].classList.add("choiceCorrect");
-            }
-            if (expEl && q.explanation) {
-              expEl.textContent = q.explanation;
-              expEl.classList.remove("hidden");
             }
             setTimeout(function () { answerQuiz(correct); }, correct ? 800 : 1200);
           });
