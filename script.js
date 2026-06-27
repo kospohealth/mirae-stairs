@@ -526,31 +526,38 @@
       function clearWorld() { world.innerHTML = ""; steps = []; currentStepEl = null; }
       function clampX(x) { var margin = 70; return Math.max(margin, Math.min(wrapW() - margin, x)); }
 
-      function makeStep(index, x, y, type) {
-        var el = document.createElement("div");
-        el.className = "step";
-        el.style.left = (x - STEP_W / 2) + "px";
-        el.style.top = y + "px";
-        world.appendChild(el);
+      function makeStep(index, x, y, type, renderStep) {
+        var el = null;
+        if (renderStep !== false) {
+          el = document.createElement("div");
+          el.className = "step";
+          el.style.left = (x - STEP_W / 2) + "px";
+          el.style.top = y + "px";
+          world.appendChild(el);
+        }
         steps[index] = { index: index, x: x, y: y, type: type, el: el };
       }
 
-      function appendNextStep(index) {
+      function appendNextStep(index, renderStep) {
         var prev = steps[index - 1];
         var dir = Math.random() > 0.5 ? 1 : -1;
         var nextX = prev.x + dir * STEP_GAP_X;
         if (nextX < 70 || nextX > wrapW() - 70) nextX = prev.x - dir * STEP_GAP_X;
-        makeStep(index, clampX(nextX), prev.y - STEP_GAP_Y, "normal");
+        makeStep(index, clampX(nextX), prev.y - STEP_GAP_Y, "normal", renderStep);
       }
 
-      function generateMap() {
+      function generateMap(targetIndex) {
         var i;
+        var safeIndex = typeof targetIndex === "number" ? Math.max(0, targetIndex) : 0;
+        var renderFrom = Math.max(0, safeIndex - 18);
+        var totalSteps = Math.max(48, safeIndex + 25);
         var x = wrapW() / 2;
         var y = Math.floor(wrapH() * PLAYER_BASE_RATIO);
         clearWorld();
-        makeStep(0, x, y, "normal");
-        // 화면 주변에 필요한 계단만 만들고 진행 중 작은 묶음으로 보충합니다.
-        for (i = 1; i < 48; i++) appendNextStep(i);
+        makeStep(0, x, y, "normal", 0 >= renderFrom);
+        // 과거 발판은 좌표 데이터만 유지하고 화면 주변 발판만 DOM으로 만듭니다.
+        for (i = 1; i < totalSteps; i++) appendNextStep(i, i >= renderFrom);
+        lastPrunedIndex = renderFrom;
       }
 
       function pruneOldSteps() {
@@ -597,10 +604,16 @@
       function snapToCurrentStep() {
         var s = currentStep();
         if (!s) return;
+        moving = false;
+        inputLocked = false;
         cameraY = wrapH() * PLAYER_BASE_RATIO - s.y;
         targetCameraY = cameraY;
         playerPos.x = s.x;
         playerPos.y = s.y;
+        playerStart.x = s.x;
+        playerStart.y = s.y;
+        playerTarget.x = s.x;
+        playerTarget.y = s.y;
         renderWorld();
         renderPlayer(1, 0);
         markCurrent();
@@ -791,8 +804,8 @@
         var nickname = nicknameInput.value.trim().slice(0, 8);
         var employeeId = employeeInput.value.trim().slice(0, 12);
         var finalScore = Math.floor(score);
-        var publicResult = { ok: true, skipped: true };
-        var sheetResult = { ok: true, skipped: true };
+        var publicResult = { ok: currentPublicRankingSaved, skipped: !currentPublicRankingSaved };
+        var sheetResult = { ok: currentAdminSheetSaved, skipped: !currentAdminSheetSaved };
 
         if (scoreUploadInProgress) { showToast("이미 기록 중이에요!", 1200); return; }
         if (currentRecordSaved) { showToast("이미 업로드된 기록이에요!", 1300); return; }
@@ -804,31 +817,42 @@
         saveScoreBtn.textContent = "기록 중...";
         if (!currentPublicRankingSaved) {
           publicResult = await savePublicRanking(nickname, finalScore);
-          currentPublicRankingSaved = publicResult.ok || publicResult.skipped;
+          currentPublicRankingSaved = publicResult.ok;
         }
         if (!currentAdminSheetSaved) {
           sheetResult = await saveAdminSheet(nickname, employeeId, finalScore, seconds, currentRecordCreatedAt);
-          currentAdminSheetSaved = sheetResult.ok || sheetResult.skipped;
+          currentAdminSheetSaved = sheetResult.ok;
         }
 
-        if ((!publicResult.ok && !publicResult.skipped) || (!sheetResult.ok && !sheetResult.skipped)) {
-          showToast("저장 실패!", 1400);
-          scoreUploadInProgress = false;
-          saveScoreBtn.disabled = false;
-          saveScoreBtn.textContent = "기록하기";
-          return;
-        }
-        if (publicResult.skipped && sheetResult.skipped) {
-          showToast("저장 설정 필요!", 1400);
-          scoreUploadInProgress = false;
-          saveScoreBtn.disabled = false;
-          saveScoreBtn.textContent = "기록하기";
-          return;
-        }
-        currentRecordSaved = true;
         scoreUploadInProgress = false;
+        saveScoreBtn.disabled = false;
+
+        if ((!publicResult.ok && !publicResult.skipped) || (!sheetResult.ok && !sheetResult.skipped)) {
+          showToast("일부 저장에 실패했어요. 다시 시도해주세요.", 2000);
+          saveScoreBtn.textContent = currentAdminSheetSaved && !currentPublicRankingSaved
+            ? "랭킹 반영 재시도"
+            : (currentPublicRankingSaved && !currentAdminSheetSaved ? "기록 접수 재시도" : "기록하기");
+          return;
+        }
+        if (currentAdminSheetSaved && !currentPublicRankingSaved) {
+          showToast("기록은 접수됐지만 공개 랭킹 반영은 지연될 수 있어요.", 2800);
+          saveScoreBtn.textContent = "랭킹 반영 재시도";
+          return;
+        }
+        if (currentPublicRankingSaved && !currentAdminSheetSaved) {
+          showToast("공개 랭킹은 반영됐지만 기록 접수가 완료되지 않았어요.", 2400);
+          saveScoreBtn.textContent = "기록 접수 재시도";
+          return;
+        }
+        if (!currentPublicRankingSaved && !currentAdminSheetSaved) {
+          showToast("저장 설정 필요!", 1600);
+          saveScoreBtn.textContent = "기록하기";
+          return;
+        }
+
+        currentRecordSaved = true;
         saveScoreBtn.textContent = "기록 완료";
-        showToast("기록 완료!", 1300);
+        showToast("기록과 공개 랭킹 반영 완료!", 1600);
         await loadRanking();
       }
 
@@ -1193,13 +1217,10 @@
         lastLayoutWidth = width;
         lastLayoutHeight = height;
         var savedIndex = currentIndex;
-        generateMap();
-        // 현재 위치 앞쪽에 필요한 계단만 보충합니다.
-        while (steps.length <= savedIndex + 24) {
-          appendNextStep(steps.length);
-        }
+        generateMap(savedIndex);
         currentIndex = savedIndex;
         snapToCurrentStep();
+        resetDeadline();
       });
 
       startOverlay.addEventListener("pointerdown", stopOverlayTouch);
