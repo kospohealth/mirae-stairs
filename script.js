@@ -133,6 +133,9 @@
       var lastLayoutWidth = 0;
       var lastLayoutHeight = 0;
       var lastPointerActionAt = 0;
+      var lastPrunedIndex = 0;
+      var autoPaused = false;
+      var audioUnlocked = false;
       var scoreUploadInProgress = false;
       var currentRecordSaved = false;
       var currentPublicRankingSaved = false;
@@ -201,6 +204,56 @@
         }
       });
 
+      // iOS Safari는 사용자 제스처 없이 오디오 재생을 차단합니다.
+      // 첫 터치 시점에 모든 오디오 요소를 무음으로 재생→즉시 정지해 잠금을 해제합니다.
+      function unlockAudio() {
+        if (audioUnlocked) return;
+        audioUnlocked = true;
+        [bgm, jumpSound, quizSound, gameOverSound].forEach(function (s) {
+          try {
+            var p = s.play();
+            if (p && p.then) {
+              p.then(function () {
+                try { s.pause(); s.currentTime = 0; } catch (err2) {}
+              }).catch(function () {});
+            } else {
+              try { s.pause(); s.currentTime = 0; } catch (err2) {}
+            }
+          } catch (err) {}
+        });
+      }
+      document.addEventListener("touchstart", unlockAudio, { once: true, passive: true, capture: true });
+      document.addEventListener("pointerdown", unlockAudio, { once: true, passive: true, capture: true });
+
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) {
+          if (running && !paused) {
+            autoPaused = true;
+            paused = true;
+            pauseStartedAt = performance.now();
+            if (animationId !== null) { cancelAnimationFrame(animationId); animationId = null; }
+          }
+        } else {
+          if (autoPaused && running) {
+            autoPaused = false;
+            var bgDuration = pauseStartedAt ? performance.now() - pauseStartedAt : 0;
+            shiftGameClock(bgDuration);
+            paused = false;
+            pauseStartedAt = 0;
+            animationId = requestAnimationFrame(loop);
+          }
+        }
+      });
+
+      window.addEventListener("pageshow", function (e) {
+        if (e.persisted) {
+          audioUnlocked = false;
+          if (running && !paused && animationId === null) {
+            animationId = requestAnimationFrame(loop);
+          }
+        }
+      });
+
       function updateSoundButtons() {
         bgmToggle.textContent = "🎵";
         sfxToggle.textContent = "🔔";
@@ -244,9 +297,9 @@
 
       function stopBgm() {
         try {
-          bgm.pause();
+          if (!bgm.paused) bgm.pause();
         } catch (err) {
-          console.error(err);
+          // iOS Safari may throw if audio context was never started
         }
       }
 
@@ -796,6 +849,7 @@
         userPaused = false;
         pauseStartedAt = 0;
         quizPausedAt = 0;
+        autoPaused = false;
         inputLocked = false;
         moving = false;
         score = 0;
@@ -885,10 +939,12 @@
           btn.type = "button";
           btn.className = "choiceBtn";
           btn.textContent = String(index + 1) + ". " + choice;
-          btn.addEventListener("click", function (event) {
+          var correct = index === q.answer;
+          var answered = false;
+          function handleAnswer(event) {
             event.stopPropagation();
-            var correct = index === q.answer;
-            // 중복 클릭 방지: 모든 버튼 즉시 비활성화
+            if (answered || btn.disabled) return;
+            answered = true;
             choices.querySelectorAll(".choiceBtn").forEach(function (b) { b.disabled = true; });
             // 내가 선택한 버튼 색 표시
             btn.classList.add(correct ? "choiceCorrect" : "choiceWrong");
@@ -896,9 +952,10 @@
             if (!correct) {
               choices.querySelectorAll(".choiceBtn")[q.answer].classList.add("choiceCorrect");
             }
-            // 정답: 0.4초, 오답: 0.7초 후 진행 (정답 위치 인지 시간 확보)
-            setTimeout(function () { answerQuiz(correct); }, correct ? 400 : 700);
-          });
+            setTimeout(function () { answerQuiz(correct); }, correct ? 800 : 1200);
+          }
+          btn.addEventListener("pointerup", handleAnswer);
+          btn.addEventListener("click", handleAnswer);
           choices.appendChild(btn);
         });
       }
