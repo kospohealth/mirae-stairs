@@ -930,8 +930,14 @@
       function gameOver(reason) {
         if (!running || paused) return;
         if (!revived) {
-          showToast(reason || "실패!", 900);
-          openQuiz("revive");
+          // A안: 퀴즈 팝업 전 0.9초 예고 토스트로 "부활 가능" 인지시킴
+          paused = true;
+          updatePauseButtonVisibility();
+          showToast("퀴즈를 맞히면 부활할 수 있어요! 💪", 1000);
+          setTimeout(function () {
+            if (!running) return;
+            openQuiz("revive");
+          }, 900);
         } else {
           endGame();
         }
@@ -1000,6 +1006,12 @@
           if (booster === "shield") {
             clearBooster();
             showToast("실수 방어!", 900);
+            resetDeadline();
+            return;
+          }
+          // B안: 첫 3스텝은 실수해도 경고만 주고 계속 진행 (조작법 학습 유예)
+          if (score < 3) {
+            showToast("반대 방향이에요! (" + (3 - score) + "번 더 연습 가능)", 1100);
             resetDeadline();
             return;
           }
