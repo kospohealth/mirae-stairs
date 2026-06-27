@@ -1,6 +1,7 @@
 @import url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css');
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; user-select: none; }
+input, textarea { -webkit-user-select: text; user-select: text; }
     :root {
       --cream: #fff8df;
       --cream-soft: rgba(255, 248, 223, .94);
@@ -636,7 +637,23 @@
       }
     }
 
-    .mainSoundControls { width: 72%; max-width: 256px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px auto 0; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+    .icedayBanner {
+  margin: 10px auto 0;
+  padding: 7px 16px;
+  width: fit-content;
+  max-width: 90%;
+  background: rgba(255, 240, 160, 0.92);
+  border: 1px solid rgba(255, 180, 0, 0.45);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #7a4a00;
+  text-align: center;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 6px rgba(200, 120, 0, 0.15);
+}
+
+.mainSoundControls { width: 72%; max-width: 256px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px auto 0; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
     .mainSoundControls button { min-height: 34px; height: 34px; margin: 0; padding: 0 7px; border-radius: 12px; border: 1px solid rgba(35,52,80,.12); background: rgba(255,252,235,.9); color: var(--ink); font-size: 12px; font-weight: 800; box-shadow: 0 3px 0 rgba(35,52,80,.12), 0 6px 10px rgba(12,47,86,.10); }
     .mainSoundControls button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(35,52,80,.10), 0 5px 10px rgba(12,47,86,.08); }
 
@@ -822,7 +839,11 @@
         0 2px 0 #d6c2a1,
         0 4px 4px rgba(0, 0, 0, .12);
     }
-    .choiceBtn { background: #ffffff; color: var(--ink); box-shadow: var(--soft-shadow); border: 1px solid var(--line); border-radius: 16px; text-align: center; margin-top: 10px; font-weight: 800; font-size: 18px; }
+    .choiceBtn { background: #ffffff; color: var(--ink); box-shadow: var(--soft-shadow); border: 1px solid var(--line); border-radius: 16px; text-align: center; margin-top: 10px; font-weight: 800; font-size: 18px; transition: background .12s, border-color .12s, color .12s; }
+.choiceCorrect { background: #dcfce7 !important; border-color: #16a34a !important; color: #14532d !important; }
+.choiceCorrect::before { content: "✓ "; }
+.choiceWrong { background: #fee2e2 !important; border-color: #dc2626 !important; color: #991b1b !important; opacity: .85; }
+.choiceWrong::before { content: "✗ "; }
     input {
       width: 100%;
       height: 48px;
@@ -862,6 +883,8 @@
 @keyframes gameOverTitlePop { from { transform: scale(.92); opacity: .4; } to { transform: scale(1); opacity: 1; } }
 #finalText { display: grid; gap: 4px; margin: 2px 0 10px; text-align: center; }
 .resultLabel { font-size: 18px; font-weight: 800; color: #334155; }
+.resultBest { font-size: 14px; font-weight: 800; color: #64748b; }
+.resultBest.newBest { color: #16a34a; font-size: 15px; }
 .resultScore {
   font-size: 64px;
   font-weight: 900;
@@ -896,10 +919,11 @@
 
   #gameOverOverlay .panel {
     max-width: 316px;
-    max-height: calc(100% - 18px);
+    max-height: calc(100svh - 24px);
     padding: 18px 18px 16px;
     border-radius: 24px;
-    overflow: visible;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   #gameOverOverlay .panel h2 {

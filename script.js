@@ -165,6 +165,15 @@
         }
       }
 
+      function getBestScore() {
+        var v = safeStorageGet("mirae_best");
+        return v ? (parseInt(v, 10) || 0) : 0;
+      }
+
+      function saveBestScore(s) {
+        if (s > getBestScore()) safeStorageSet("mirae_best", String(s));
+      }
+
       var bgmEnabled = safeStorageGet("mirae_bgm") !== "off" && safeStorageGet("bgmEnabled") !== "false";
       var sfxEnabled = safeStorageGet("mirae_sfx") !== "off" && safeStorageGet("sfxEnabled") !== "false";
 
@@ -743,8 +752,8 @@
 
         if (scoreUploadInProgress) { showToast("이미 기록 중이에요!", 1200); return; }
         if (currentRecordSaved) { showToast("이미 업로드된 기록이에요!", 1300); return; }
-        if (!nickname) { showToast("닉네임을 입력해줘!", 1200); return; }
         if (!employeeId) { showToast("사번을 입력해줘!", 1200); return; }
+        if (!nickname) nickname = "익명";
 
         scoreUploadInProgress = true;
         saveScoreBtn.disabled = true;
@@ -832,7 +841,8 @@
           animationId = requestAnimationFrame(loop);
         } catch (err) {
           console.error("게임 시작 오류:", err);
-          alert("게임 시작 중 오류가 났어요. 콘솔 오류를 확인해줘!\n" + err.message);
+          showToast("게임을 시작할 수 없어요. 페이지를 새로고침 해주세요.", 3500);
+          startOverlay.classList.remove("hidden");
         }
       }
 
@@ -877,7 +887,17 @@
           btn.textContent = String(index + 1) + ". " + choice;
           btn.addEventListener("click", function (event) {
             event.stopPropagation();
-            answerQuiz(index === q.answer);
+            var correct = index === q.answer;
+            // 중복 클릭 방지: 모든 버튼 즉시 비활성화
+            choices.querySelectorAll(".choiceBtn").forEach(function (b) { b.disabled = true; });
+            // 내가 선택한 버튼 색 표시
+            btn.classList.add(correct ? "choiceCorrect" : "choiceWrong");
+            // 오답이면 정답 버튼도 함께 강조
+            if (!correct) {
+              choices.querySelectorAll(".choiceBtn")[q.answer].classList.add("choiceCorrect");
+            }
+            // 정답: 0.4초, 오답: 0.7초 후 진행 (정답 위치 인지 시간 확보)
+            setTimeout(function () { answerQuiz(correct); }, correct ? 400 : 700);
           });
           choices.appendChild(btn);
         });
@@ -910,8 +930,14 @@
       function gameOver(reason) {
         if (!running || paused) return;
         if (!revived) {
-          showToast(reason || "실패!", 900);
-          openQuiz("revive");
+          // A안: 퀴즈 팝업 전 0.9초 예고 토스트로 "부활 가능" 인지시킴
+          paused = true;
+          updatePauseButtonVisibility();
+          showToast("퀴즈를 맞히면 부활할 수 있어요! 💪", 1000);
+          setTimeout(function () {
+            if (!running) return;
+            openQuiz("revive");
+          }, 900);
         } else {
           endGame();
         }
@@ -934,7 +960,14 @@
         currentRecordSaved = false;
         currentPublicRankingSaved = false;
         currentAdminSheetSaved = false;
-        finalText.innerHTML = '<span class="resultLabel">최종 점수</span><strong class="resultScore">' + Math.floor(score) + '점</strong><span class="resultTime">생존 시간 ' + seconds + '초</span>';
+        var finalScore = Math.floor(score);
+        var prevBest = getBestScore();
+        var isNewBest = finalScore > prevBest;
+        saveBestScore(finalScore);
+        var bestLine = isNewBest
+          ? '<span class="resultBest newBest">🎉 최고 기록 갱신!</span>'
+          : (prevBest > 0 ? '<span class="resultBest">최고 기록 ' + prevBest + '점</span>' : '');
+        finalText.innerHTML = '<span class="resultLabel">최종 점수</span><strong class="resultScore">' + finalScore + '점</strong>' + bestLine + '<span class="resultTime">생존 시간 ' + seconds + '초</span>';
         nicknameInput.value = "";
         employeeInput.value = "";
         saveScoreBtn.disabled = false;
@@ -973,6 +1006,12 @@
           if (booster === "shield") {
             clearBooster();
             showToast("실수 방어!", 900);
+            resetDeadline();
+            return;
+          }
+          // B안: 첫 3스텝은 실수해도 경고만 주고 계속 진행 (조작법 학습 유예)
+          if (score < 3) {
+            showToast("반대 방향이에요! (" + (3 - score) + "번 더 연습 가능)", 1100);
             resetDeadline();
             return;
           }
@@ -1075,7 +1114,13 @@
         if (Math.abs(width - lastLayoutWidth) < 24 && Math.abs(height - lastLayoutHeight) < 120) return;
         lastLayoutWidth = width;
         lastLayoutHeight = height;
+        var savedIndex = currentIndex;
         generateMap();
+        // generateMap이 steps[]를 0~119로 초기화하므로, savedIndex가 범위를 벗어나면 추가 생성합니다.
+        while (steps.length <= savedIndex + 45) {
+          appendNextStep(steps.length);
+        }
+        currentIndex = savedIndex;
         snapToCurrentStep();
       });
 
