@@ -618,7 +618,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
    버튼 크기와 스타일은 유지하고, 메뉴 묶음 위치만 아래로 내려 로고와 겹치지 않게 합니다. */
     @media (max-width: 480px) {
       .mainPanel {
-        bottom: max(clamp(30px, 5%, 56px), calc(env(safe-area-inset-bottom) + 14px));
+        bottom: max(clamp(14px, 3%, 40px), calc(env(safe-area-inset-bottom) + 8px));
       }
 
       .menu-container {
