@@ -841,7 +841,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
         0 2px 0 #d6c2a1,
         0 4px 4px rgba(0, 0, 0, .12);
     }
-    .choiceBtn { background: #ffffff; color: var(--ink); box-shadow: var(--soft-shadow); border: 1px solid var(--line); border-radius: 16px; text-align: center; margin-top: 10px; font-weight: 800; font-size: 18px; transition: background .12s, border-color .12s, color .12s; }
+    .choiceBtn { background: #ffffff; color: var(--ink); box-shadow: var(--soft-shadow); border: 1px solid var(--line); border-radius: 16px; text-align: center; margin-top: 10px; font-weight: 800; font-size: 15px; transition: background .12s, border-color .12s, color .12s; }
 .choiceCorrect { background: #dcfce7 !important; border-color: #16a34a !important; color: #14532d !important; }
 .choiceCorrect::before { content: "✓ "; }
 .choiceWrong { background: #fee2e2 !important; border-color: #dc2626 !important; color: #991b1b !important; opacity: .85; }
