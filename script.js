@@ -652,6 +652,7 @@
         pauseStartedAt = 0;
         pauseOverlay.classList.add("hidden");
         updatePauseButtonVisibility();
+        startLoop();
       }
 
       function quitPausedGame(e) {
@@ -833,6 +834,7 @@
 
       function resetGame() {
         if (animationId !== null) cancelAnimationFrame(animationId);
+        animationId = null;
         stopBgm();
         running = true;
         paused = false;
@@ -891,7 +893,7 @@
           prepareAudio();
           resetGame();
           playBgm();
-          animationId = requestAnimationFrame(loop);
+          startLoop();
         } catch (err) {
           console.error("게임 시작 오류:", err);
           showToast("게임을 시작할 수 없어요. 페이지를 새로고침 해주세요.", 3500);
@@ -962,6 +964,7 @@
           else showToast("오답! 부스터 없음");
           paused = false;
           updatePauseButtonVisibility();
+          startLoop();
           return;
         }
         if (quizMode === "revive") {
@@ -972,6 +975,7 @@
             snapToCurrentStep();
             resetDeadline();
             updatePauseButtonVisibility();
+            startLoop();
           } else {
             endGame();
           }
@@ -1133,10 +1137,14 @@
         }
         if (remain <= 0 && !moving) gameOver("시간 초과!");
       }
-      function loop(now) {
-        if (!running) return;
+      function startLoop() {
+        if (!running || paused || animationId !== null) return;
         animationId = requestAnimationFrame(loop);
-        if (paused) return;
+      }
+      function loop(now) {
+        animationId = null;
+        if (!running || paused) return;
+        animationId = requestAnimationFrame(loop);
         if (lastFrameTime && now - lastFrameTime < FRAME_INTERVAL * 0.75) return;
         lastFrameTime = now;
         seconds = Math.floor((now - gameStartTime) / 1000);
