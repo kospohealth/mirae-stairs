@@ -575,7 +575,7 @@
         currentStepEl = steps[currentIndex] ? steps[currentIndex].el : null;
         if (currentStepEl) currentStepEl.classList.add("current");
       }
-      function renderWorld() { world.style.transform = "translateY(" + cameraY + "px)"; }
+      function renderWorld() { world.style.transform = "translate3d(0," + cameraY + "px,0)"; }
       function renderPlayer(extraScale, tilt) {
         if (typeof extraScale !== "number") extraScale = 1;
         if (typeof tilt !== "number") tilt = 0;
