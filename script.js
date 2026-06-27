@@ -7,48 +7,60 @@
       var supabaseClient = null;
 
       var quizzes = [
-        { question: "폭염 시 가장 중요한 행동은?", choices: ["수분섭취와 휴식", "참고 버티기", "두꺼운 옷 입기"], answer: 0 },
-        { question: "체감온도 33℃ 이상이면?", choices: ["쉬지 않고 작업", "물을 마시지 않기", "2시간마다 20분 휴식"], answer: 2 },
-        { question: "폭염 때 시원한 물은?", choices: ["하루 한 번만 마신다", "충분히 자주 마신다", "뜨거운 커피만 마신다"], answer: 1 },
-        { question: "온열질환 의심 시 가장 먼저 할 일은?", choices: ["시원한 곳으로 이동", "더 오래 작업", "햇볕 아래 있기"], answer: 0 },
-        { question: "폭염 작업 시 좋은 휴식 장소는?", choices: ["그늘 또는 시원한 곳", "뜨거운 바닥", "직사광선 아래"], answer: 0 },
-        { question: "폭염 예방에 도움이 되는 것은?", choices: ["보냉장구 착용", "두꺼운 담요", "밀폐된 공간"], answer: 0 },
-        { question: "체감온도 35℃ 이상 폭염경보 때 권고되는 것은?", choices: ["가장 더울 때 작업하기", "휴식 줄이기", "무더위 시간대 옥외작업 중지"], answer: 2 },
-        { question: "어지럽고 식은땀이 나면?", choices: ["더 빨리 움직이기", "즉시 쉬고 상태 확인", "물을 피하기"], answer: 1 },
-        { question: "몸을 식히는 데 좋은 방법은?", choices: ["뜨거운 장소로 이동", "햇볕 오래 쬐기", "시원한 물과 그늘"], answer: 2 },
-        { question: "체감온도 38℃ 이상이면?", choices: ["긴급작업 외 옥외작업 중지", "휴식 없이 작업", "작업속도 높이기"], answer: 0 },
-        { question: "동료가 온열질환으로 의식이 이상하면?", choices: ["119에 신고", "혼자 쉬게 두기", "운동을 시키기"], answer: 0 },
-        { question: "폭염 시 갈증이 나기 전에도 해야 할 일은?", choices: ["물을 참기", "카페인만 마시기", "물을 조금씩 자주 마시기"], answer: 2 },
-        { question: "폭염으로 어지럽고 메스꺼우면 해야 하는 행동은?", choices: ["더 빨리 움직이기", "시원한 곳으로 이동하기", "그냥 참기"], answer: 1 },
-        { question: "체감온도 33℃ 이상일 때 권장되는 것은?", choices: ["쉬지 않고 작업", "2시간마다 20분 이상 휴식", "물을 마시지 않기"], answer: 1 },
-        { question: "폭염 시 가장 피해야 하는 행동은?", choices: ["그늘에서 쉬기", "갈증날 때까지 물 안 마시기", "시원한 물 마시기"], answer: 2 },
-        { question: "온열질환 증상으로 맞는 것은?", choices: ["어지러움", "손발 얼음처럼 차가움", "콧물만 남"], answer: 0 },
-        { question: "폭염 작업 시 좋은 복장은?", choices: ["두꺼운 검은 옷", "통풍 잘 되는 밝은 옷", "패딩점퍼"], answer: 1 },
-        { question: "온열질환자가 의식이 없다면?", choices: ["물을 마시게 한다", "잠깐 기다린다", "즉시 119에 신고한다"], answer: 2 },
-        { question: "폭염 시간대 중 가장 더운 시간은?", choices: ["오후 2~5시", "새벽 5시", "오전 8시"], answer: 0 },
-        { question: "폭염 시 쉬기 좋은 장소는?", choices: ["햇볕 아래", "밀폐된 차량 안", "그늘지고 시원한 곳"], answer: 2 },
-        { question: "온열질환 예방에 도움이 되는 것은?", choices: ["규칙적인 휴식", "무리한 운동", "물 안 마시기"], answer: 0 },
-        { question: "폭염 속 차량 안이 위험한 이유는?", choices: ["너무 조용해서", "온도가 매우 빨리 올라가서", "창문이 많아서"], answer: 1 },
-        { question: "땀을 많이 흘렸을 때 가장 필요한 것은?", choices: ["수분 보충", "뜨거운 커피", "두꺼운 담요"], answer: 0 },
-        { question: "폭염 시 위험할 수 있는 장소는?", choices: ["그늘막 아래", "환기 안 되는 밀폐공간", "에어컨 있는 실내"], answer: 1 },
-        { question: "야외 작업 시 도움이 되는 것은?", choices: ["목도리", "냉각조끼", "털장갑"], answer: 1 },
-        { question: "사업장에서 폭염 대비 제공해야 하는 것은?", choices: ["시원한 물", "뜨거운 국물", "겨울 외투"], answer: 0 },
-        { question: "온열질환자가 의식이 없을 때 해야 하는 행동은?", choices: ["따뜻한 곳으로 이동", "몸 식혀주기", "억지로 물 먹이기"], answer: 1 },
-        { question: "몸을 식히는 방법으로 맞는 것은?", choices: ["두꺼운 옷 입기", "선풍기 사용하기", "햇볕 아래 있기"], answer: 1 },
-        { question: "폭염주의보 기준 체감온도는?", choices: ["33℃ 이상", "20℃ 이상", "15℃ 이하"], answer: 0 },
-        { question: "폭염경보 기준 체감온도는?", choices: ["25℃ 이상", "40℃ 이상", "35℃ 이상"], answer: 2 },
-        { question: "폭염 속 건강을 지키는 가장 좋은 습관은?", choices: ["무리하지 않기", "쉬지 않고 움직이기", "물 안 마시기"], answer: 0 },
-        { question: "폭우가 올 때 가장 안전한 행동은?", choices: ["하천 근처로 구경 간다", "지하주차장으로 이동한다", "높은 곳이나 실내로 대피한다"], answer: 2 },
-        { question: "태풍이 올 때 창문 관리로 가장 올바른 것은?", choices: ["창문을 열어 둔다", "창문을 테이프로 보강하거나 단단히 닫는다", "창문을 조금만 열어둔다"], answer: 1 },
-        { question: "집중호우 시 차량 운전 중 가장 위험한 행동은?", choices: ["속도를 줄인다", "침수 도로를 무리하게 통과한다", "라이트를 켠다"], answer: 1 },
-        { question: "침수 위험이 있는 장소는?", choices: ["언덕 위 주택", "지하상가", "고층 아파트"], answer: 1 },
-        { question: "태풍 대비로 미리 해야 할 일은?", choices: ["창문 주변 정리 및 외부 물건 고정", "집 밖으로 나가 상황 확인", "가벼운 옷 준비만 한다"], answer: 0 },
-        { question: "호우 시 하천 근처에서 해야 할 행동은?", choices: ["사진 찍는다", "즉시 벗어난다", "물 흐름을 확인한다"], answer: 1 },
-        { question: "정전이 예상되는 태풍 상황에서 준비물은?", choices: ["손전등, 비상식량", "선풍기만 준비", "휴대폰만 충전"], answer: 0 },
-        { question: "폭우 중 가장 위험한 장소는?", choices: ["대형마트 내부", "산사태 위험 지역", "카페"], answer: 1 },
-        { question: "침수된 길을 걸어야 한다면 가장 안전한 방법은?", choices: ["맨발로 빠르게 이동", "물 깊이를 확인하고 우회", "뛰어서 통과"], answer: 1 },
-        { question: "재난 문자(긴급알림)를 받았을 때 해야 할 행동은?", choices: ["무시하고 하던 일 계속", "내용 확인 후 안내에 따라 행동", "바로 SNS에 공유만 한다"], answer: 1 }
+        { question: "폭염 시 가장 중요한 행동은?", choices: ["수분섭취와 휴식", "참고 버티기", "두꺼운 옷 입기"], answer: 0, explanation: "폭염 시 탈수와 열사병 예방을 위해 충분한 수분 섭취와 규칙적인 휴식이 가장 중요합니다." },
+        { question: "체감온도 33℃ 이상이면?", choices: ["쉬지 않고 작업", "물을 마시지 않기", "2시간마다 20분 휴식"], answer: 2, explanation: "산업안전보건법 권고: 체감 33℃ 이상에서는 2시간마다 20분 이상 시원한 곳에서 휴식해야 합니다." },
+        { question: "폭염 때 시원한 물은?", choices: ["하루 한 번만 마신다", "충분히 자주 마신다", "뜨거운 커피만 마신다"], answer: 1, explanation: "갈증을 느끼기 전에 조금씩 자주 마셔야 합니다. 1시간에 200~250mL 이상 수분 섭취를 권장합니다." },
+        { question: "온열질환 의심 시 가장 먼저 할 일은?", choices: ["시원한 곳으로 이동", "더 오래 작업", "햇볕 아래 있기"], answer: 0, explanation: "온열질환 응급처치 1단계는 즉시 시원한 곳으로 이동시켜 체온을 낮추는 것입니다." },
+        { question: "폭염 작업 시 좋은 휴식 장소는?", choices: ["그늘 또는 시원한 곳", "뜨거운 바닥", "직사광선 아래"], answer: 0, explanation: "그늘이나 에어컨 공간에서 충분히 체온을 낮춰야 다음 작업 시 열사병을 예방할 수 있습니다." },
+        { question: "폭염 예방에 도움이 되는 것은?", choices: ["보냉장구 착용", "두꺼운 담요", "밀폐된 공간"], answer: 0, explanation: "냉각조끼, 아이스팩 등 보냉장구는 체표 온도를 낮춰 온열질환 위험을 효과적으로 줄여줍니다." },
+        { question: "체감온도 35℃ 이상 폭염경보 때 권고되는 것은?", choices: ["가장 더울 때 작업하기", "휴식 줄이기", "무더위 시간대 옥외작업 중지"], answer: 2, explanation: "폭염경보 발령 시 오후 2~5시 무더위 시간대의 옥외작업은 중지하는 것이 법적 권고사항입니다." },
+        { question: "어지럽고 식은땀이 나면?", choices: ["더 빨리 움직이기", "즉시 쉬고 상태 확인", "물을 피하기"], answer: 1, explanation: "어지러움과 식은땀은 열탈진 초기 신호입니다. 즉시 작업을 멈추고 시원한 곳에서 쉬어야 합니다." },
+        { question: "몸을 식히는 데 좋은 방법은?", choices: ["뜨거운 장소로 이동", "햇볕 오래 쬐기", "시원한 물과 그늘"], answer: 2, explanation: "시원한 물로 피부를 적시고 그늘에 있으면 땀 증발을 통해 체온이 효과적으로 낮아집니다." },
+        { question: "체감온도 38℃ 이상이면?", choices: ["긴급작업 외 옥외작업 중지", "휴식 없이 작업", "작업속도 높이기"], answer: 0, explanation: "체감 38℃ 이상 극폭염에서는 긴급작업을 제외한 모든 옥외 활동을 즉시 중단해야 합니다." },
+        { question: "동료가 온열질환으로 의식이 이상하면?", choices: ["119에 신고", "혼자 쉬게 두기", "운동을 시키기"], answer: 0, explanation: "의식 저하는 열사병의 위험 신호입니다. 즉시 119에 신고하고 전문 응급처치를 받게 해야 합니다." },
+        { question: "폭염 시 갈증이 나기 전에도 해야 할 일은?", choices: ["물을 참기", "카페인만 마시기", "물을 조금씩 자주 마시기"], answer: 2, explanation: "갈증은 이미 탈수가 시작됐다는 신호입니다. 갈증 전에 예방적으로 수분을 보충해야 합니다." },
+        { question: "폭염으로 어지럽고 메스꺼우면 해야 하는 행동은?", choices: ["더 빨리 움직이기", "시원한 곳으로 이동하기", "그냥 참기"], answer: 1, explanation: "메스꺼움은 열탈진 증상입니다. 즉시 시원한 곳으로 이동해 휴식을 취하고 수분을 보충해야 합니다." },
+        { question: "체감온도 33℃ 이상일 때 권장되는 것은?", choices: ["쉬지 않고 작업", "2시간마다 20분 이상 휴식", "물을 마시지 않기"], answer: 1, explanation: "지속적인 고온 노출을 막기 위해 2시간마다 최소 20분 이상 시원한 곳에서 쉬어야 합니다." },
+        { question: "폭염 시 가장 피해야 하는 행동은?", choices: ["그늘에서 쉬기", "갈증날 때까지 물 안 마시기", "시원한 물 마시기"], answer: 1, explanation: "갈증이 생길 때까지 물을 참으면 이미 탈수 상태입니다. 폭염 시 수시로 물을 마셔야 합니다." },
+        { question: "온열질환 증상으로 맞는 것은?", choices: ["어지러움", "손발 얼음처럼 차가움", "콧물만 남"], answer: 0, explanation: "온열질환의 주요 증상은 어지러움, 두통, 구역감, 근육경련 등입니다. 손발이 차가운 것은 해당되지 않습니다." },
+        { question: "폭염 작업 시 좋은 복장은?", choices: ["두꺼운 검은 옷", "통풍 잘 되는 밝은 옷", "패딩점퍼"], answer: 1, explanation: "밝은 색 통풍 옷은 햇빛을 반사하고 땀 증발을 도와 체온 상승을 효과적으로 억제합니다." },
+        { question: "온열질환자가 의식이 없다면?", choices: ["물을 마시게 한다", "잠깐 기다린다", "즉시 119에 신고한다"], answer: 2, explanation: "의식 없는 환자에게 물을 먹이면 기도가 막힐 수 있습니다. 즉시 119에 신고해 전문처치를 받게 하세요." },
+        { question: "폭염 시간대 중 가장 더운 시간은?", choices: ["오후 2~5시", "새벽 5시", "오전 8시"], answer: 0, explanation: "태양 복사열이 최고조에 달하는 오후 2~5시가 폭염 시 가장 위험한 시간대입니다." },
+        { question: "폭염 시 쉬기 좋은 장소는?", choices: ["햇볕 아래", "밀폐된 차량 안", "그늘지고 시원한 곳"], answer: 2, explanation: "직사광선과 밀폐 공간을 피하고 통풍이 잘 되는 그늘진 시원한 공간에서 휴식을 취해야 합니다." },
+        { question: "온열질환 예방에 도움이 되는 것은?", choices: ["규칙적인 휴식", "무리한 운동", "물 안 마시기"], answer: 0, explanation: "규칙적인 휴식으로 체온이 축적되지 않게 하는 것이 온열질환 예방의 핵심입니다." },
+        { question: "폭염 속 차량 안이 위험한 이유는?", choices: ["너무 조용해서", "온도가 매우 빨리 올라가서", "창문이 많아서"], answer: 1, explanation: "폭염 시 밀폐된 차량 내부 온도는 10분 내에 60℃까지 치솟을 수 있어 매우 위험합니다." },
+        { question: "땀을 많이 흘렸을 때 가장 필요한 것은?", choices: ["수분 보충", "뜨거운 커피", "두꺼운 담요"], answer: 0, explanation: "땀으로 빠져나간 수분과 전해질을 보충하기 위해 물 또는 이온음료 섭취가 필요합니다." },
+        { question: "폭염 시 위험할 수 있는 장소는?", choices: ["그늘막 아래", "환기 안 되는 밀폐공간", "에어컨 있는 실내"], answer: 1, explanation: "환기가 안 되는 밀폐공간은 열이 축적되어 폭염 시 온열질환 발생 위험이 극도로 높아집니다." },
+        { question: "야외 작업 시 도움이 되는 것은?", choices: ["목도리", "냉각조끼", "털장갑"], answer: 1, explanation: "냉각조끼는 체표 온도를 낮춰 더운 환경에서도 체온 상승을 억제하는 효과적인 보호 장비입니다." },
+        { question: "사업장에서 폭염 대비 제공해야 하는 것은?", choices: ["시원한 물", "뜨거운 국물", "겨울 외투"], answer: 0, explanation: "사업주는 폭염 시 근로자에게 시원한 음용수를 무상으로 충분히 제공해야 할 법적 의무가 있습니다." },
+        { question: "온열질환자가 의식이 없을 때 해야 하는 행동은?", choices: ["따뜻한 곳으로 이동", "몸 식혀주기", "억지로 물 먹이기"], answer: 1, explanation: "의식 없는 온열질환자는 체온을 낮추는 응급처치를 하면서 즉시 119에 신고해야 합니다. 물을 억지로 먹이면 기도가 막힙니다." },
+        { question: "몸을 식히는 방법으로 맞는 것은?", choices: ["두꺼운 옷 입기", "선풍기 사용하기", "햇볕 아래 있기"], answer: 1, explanation: "선풍기 바람은 땀의 증발을 촉진해 체온을 낮춥니다. 그늘 아래에서 함께 사용하면 더 효과적입니다." },
+        { question: "폭염주의보 기준 체감온도는?", choices: ["33℃ 이상", "20℃ 이상", "15℃ 이하"], answer: 0, explanation: "체감온도 33℃ 이상이 2일 이상 지속될 것으로 예상될 때 폭염주의보가 발령됩니다." },
+        { question: "폭염경보 기준 체감온도는?", choices: ["25℃ 이상", "40℃ 이상", "35℃ 이상"], answer: 2, explanation: "체감온도 35℃ 이상이 2일 이상 지속될 것으로 예상될 때 폭염경보가 발령됩니다." },
+        { question: "폭염 속 건강을 지키는 가장 좋은 습관은?", choices: ["무리하지 않기", "쉬지 않고 움직이기", "물 안 마시기"], answer: 0, explanation: "폭염 시에는 체력 한계 이상으로 무리하지 않는 것이 온열질환 예방의 가장 기본적인 원칙입니다." },
+        { question: "폭우가 올 때 가장 안전한 행동은?", choices: ["하천 근처로 구경 간다", "지하주차장으로 이동한다", "높은 곳이나 실내로 대피한다"], answer: 2, explanation: "폭우 시 하천은 범람 위험, 지하는 침수 위험이 있습니다. 높은 곳이나 안전한 실내로 즉시 대피하세요." },
+        { question: "태풍이 올 때 창문 관리로 가장 올바른 것은?", choices: ["창문을 열어 둔다", "창문을 테이프로 보강하거나 단단히 닫는다", "창문을 조금만 열어둔다"], answer: 1, explanation: "창문에 테이프를 붙이면 강풍으로 유리가 깨져도 파편 비산을 줄여줍니다. 단단히 닫는 것이 기본입니다." },
+        { question: "집중호우 시 차량 운전 중 가장 위험한 행동은?", choices: ["속도를 줄인다", "침수 도로를 무리하게 통과한다", "라이트를 켠다"], answer: 1, explanation: "침수된 도로는 깊이를 알 수 없고 차량이 떠내려갈 수 있습니다. 절대 통과하지 말고 우회해야 합니다." },
+        { question: "침수 위험이 있는 장소는?", choices: ["언덕 위 주택", "지하상가", "고층 아파트"], answer: 1, explanation: "지하상가는 폭우 시 빠르게 침수되고 탈출이 어려워 매우 위험합니다. 호우 예보 시 미리 대피하세요." },
+        { question: "태풍 대비로 미리 해야 할 일은?", choices: ["창문 주변 정리 및 외부 물건 고정", "집 밖으로 나가 상황 확인", "가벼운 옷 준비만 한다"], answer: 0, explanation: "태풍 전 외부 물건을 고정하지 않으면 강풍에 날려 인명·재산 피해를 줄 수 있습니다." },
+        { question: "호우 시 하천 근처에서 해야 할 행동은?", choices: ["사진 찍는다", "즉시 벗어난다", "물 흐름을 확인한다"], answer: 1, explanation: "폭우 시 하천 수위는 예상보다 훨씬 빠르게 상승합니다. 하천 근처에 있다면 즉시 벗어나는 것이 최우선입니다." },
+        { question: "정전이 예상되는 태풍 상황에서 준비물은?", choices: ["손전등, 비상식량", "선풍기만 준비", "휴대폰만 충전"], answer: 0, explanation: "태풍으로 정전이 발생하면 손전등과 비상식량이 필수 생존 물품입니다. 배터리형 라디오도 유용합니다." },
+        { question: "폭우 중 가장 위험한 장소는?", choices: ["대형마트 내부", "산사태 위험 지역", "카페"], answer: 1, explanation: "집중호우 시 산사태 위험 지역에는 토사가 갑자기 쏟아질 수 있습니다. 즉시 안전한 곳으로 대피해야 합니다." },
+        { question: "침수된 길을 걸어야 한다면 가장 안전한 방법은?", choices: ["맨발로 빠르게 이동", "물 깊이를 확인하고 우회", "뛰어서 통과"], answer: 1, explanation: "침수된 길은 깊이를 알 수 없고 오염 위험이 있습니다. 깊이를 확인하고 가능하면 우회 경로를 이용하세요." },
+        { question: "재난 문자(긴급알림)를 받았을 때 해야 할 행동은?", choices: ["무시하고 하던 일 계속", "내용 확인 후 안내에 따라 행동", "바로 SNS에 공유만 한다"], answer: 1, explanation: "재난 문자는 행정안전부가 발송하는 공식 위기 정보입니다. 반드시 내용을 확인하고 안내에 따라 즉시 행동해야 합니다." }
       ];
+
+      var quizPool = [];
+      function getNextQuiz() {
+        if (quizPool.length === 0) {
+          quizPool = quizzes.slice();
+          for (var i = quizPool.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = quizPool[i]; quizPool[i] = quizPool[j]; quizPool[j] = tmp;
+          }
+        }
+        return quizPool.pop();
+      }
 
       var gameWrap = document.getElementById("gameWrap");
       var loadingOverlay = document.getElementById("loadingOverlay");
@@ -87,6 +99,10 @@
       var nicknameInput = document.getElementById("nicknameInput");
       var employeeInput = document.getElementById("employeeInput");
       var saveScoreBtn = document.getElementById("saveScoreBtn");
+      var timerBarWrap = document.getElementById("timerBarWrap");
+      var shareBtn = document.getElementById("shareBtn");
+      var touchGuide = document.getElementById("touchGuide");
+      var directionGuide = document.getElementById("directionGuide");
       var bgmToggle = document.getElementById("bgmToggle");
       var sfxToggle = document.getElementById("sfxToggle");
       var pauseBtn = document.getElementById("pauseBtn");
@@ -182,7 +198,7 @@
       var quizSound = new Audio("assets/quiz.wav");
       var gameOverSound = new Audio("assets/gameover.mp3");
 
-      bgm.preload = "auto";
+      bgm.preload = "metadata";
       jumpSound.preload = "auto";
       quizSound.preload = "auto";
       gameOverSound.preload = "auto";
@@ -523,10 +539,21 @@
         for (i = 1; i < 120; i++) appendNextStep(i);
       }
 
+      function pruneOldSteps() {
+        var pruneUntil = currentIndex - 30;
+        var i;
+        for (i = 0; i < pruneUntil; i++) {
+          if (steps[i] && steps[i].el && steps[i].el.parentNode) {
+            steps[i].el.parentNode.removeChild(steps[i].el);
+            steps[i].el = null;
+          }
+        }
+      }
       function ensureMoreSteps() {
         var i;
         var start;
         var end;
+        pruneOldSteps();
         if (currentIndex <= steps.length - 45) return;
         start = steps.length;
         end = start + 70;
@@ -564,9 +591,9 @@
         markCurrent();
       }
       function getStepTimeLimit() {
-        var limit = BASE_STEP_TIME - Math.min(1300, score * 7);
+        var limit = BASE_STEP_TIME - Math.min(1300, score * 4);
         if (booster === "slow") limit += 1100;
-        return Math.max(1600, limit);
+        return Math.max(2000, limit);
       }
       function resetDeadline() { stepDeadline = performance.now() + getStepTimeLimit(); }
 
@@ -817,6 +844,11 @@
         renderDecor("ground");
         player.classList.remove("invincible");
         timerBar.style.transform = "scaleX(1)";
+        timerBarWrap.classList.remove("urgent");
+        touchGuide.style.transition = "";
+        touchGuide.style.opacity = "1";
+        directionGuide.style.transition = "";
+        directionGuide.style.opacity = "1";
         generateMap();
         snapToCurrentStep();
         resetDeadline();
@@ -853,13 +885,13 @@
         if (booster === "shield") {
           player.classList.add("invincible");
           playSfx(quizSound);
-          showToast("정답! 실수방어 5초");
+          showToast("정답! 실수방어 5초", 1500);
         } else if (booster === "slow") {
           playSfx(quizSound);
-          showToast("정답! 시간 여유 5초");
+          showToast("정답! 시간 여유 5초", 1500);
         } else {
           playSfx(quizSound);
-          showToast("정답! 점수 2배 5초");
+          showToast("정답! 점수 2배 5초", 1500);
         }
       }
       function clearBooster() {
@@ -871,13 +903,15 @@
         lastBoosterLabel = "⚡ x0";
       }
       function openQuiz(mode) {
-        var q = quizzes[Math.floor(Math.random() * quizzes.length)];
+        var q = getNextQuiz();
+        var expEl = document.getElementById("quizExplanation");
         paused = true;
         quizPausedAt = performance.now();
         updatePauseButtonVisibility();
         quizMode = mode;
         quizOverlay.classList.remove("hidden");
         choices.innerHTML = "";
+        if (expEl) { expEl.textContent = ""; expEl.classList.add("hidden"); }
         quizTitle.textContent = mode === "revive" ? "부활 폭염퀴즈" : "보너스 폭염퀴즈";
         quizQuestion.textContent = q.question;
         q.choices.forEach(function (choice, index) {
@@ -888,16 +922,16 @@
           btn.addEventListener("click", function (event) {
             event.stopPropagation();
             var correct = index === q.answer;
-            // 중복 클릭 방지: 모든 버튼 즉시 비활성화
             choices.querySelectorAll(".choiceBtn").forEach(function (b) { b.disabled = true; });
-            // 내가 선택한 버튼 색 표시
             btn.classList.add(correct ? "choiceCorrect" : "choiceWrong");
-            // 오답이면 정답 버튼도 함께 강조
             if (!correct) {
               choices.querySelectorAll(".choiceBtn")[q.answer].classList.add("choiceCorrect");
             }
-            // 정답: 0.4초, 오답: 0.7초 후 진행 (정답 위치 인지 시간 확보)
-            setTimeout(function () { answerQuiz(correct); }, correct ? 400 : 700);
+            if (expEl && q.explanation) {
+              expEl.textContent = q.explanation;
+              expEl.classList.remove("hidden");
+            }
+            setTimeout(function () { answerQuiz(correct); }, correct ? 800 : 1200);
           });
           choices.appendChild(btn);
         });
@@ -930,14 +964,13 @@
       function gameOver(reason) {
         if (!running || paused) return;
         if (!revived) {
-          // A안: 퀴즈 팝업 전 0.9초 예고 토스트로 "부활 가능" 인지시킴
           paused = true;
           updatePauseButtonVisibility();
-          showToast("퀴즈를 맞히면 부활할 수 있어요! 💪", 1000);
+          showToast("퀴즈를 맞히면 부활할 수 있어요! 💪", 600);
           setTimeout(function () {
             if (!running) return;
             openQuiz("revive");
-          }, 900);
+          }, 400);
         } else {
           endGame();
         }
@@ -972,6 +1005,11 @@
         employeeInput.value = "";
         saveScoreBtn.disabled = false;
         saveScoreBtn.textContent = "기록하기";
+        if (navigator.share) {
+          shareBtn.classList.remove("hidden");
+        } else {
+          shareBtn.classList.add("hidden");
+        }
         loadRanking();
       }
       function handleTimedQuiz() {
@@ -1034,6 +1072,12 @@
         updateHud();
         updateStage();
         ensureMoreSteps();
+        if (score === 5) {
+          touchGuide.style.transition = "opacity 0.8s";
+          touchGuide.style.opacity = "0";
+          directionGuide.style.transition = "opacity 0.8s";
+          directionGuide.style.opacity = "0";
+        }
       }
       function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
       function updateMovement(now) {
@@ -1062,6 +1106,7 @@
         var remain = Math.max(0, stepDeadline - now);
         var ratio = remain / getStepTimeLimit();
         timerBar.style.transform = "scaleX(" + Math.max(0, Math.min(1, ratio)) + ")";
+        timerBarWrap.classList.toggle("urgent", ratio < 0.25);
         if (remain <= 0 && !moving) gameOver("시간 초과!");
       }
       function loop(now) {
@@ -1074,7 +1119,6 @@
         updateMovement(now);
         updateTimer(now);
         updateHud();
-        updatePauseButtonVisibility();
       }
 
       function stopOverlayTouch(e) { if (e && e.stopPropagation) e.stopPropagation(); }
@@ -1158,6 +1202,23 @@
       restartBtn.addEventListener("pointerup", handleStartButton);
       gameOverMainBtn.addEventListener("pointerup", showMainMenu);
       saveScoreBtn.addEventListener("pointerup", handleSaveButton);
+      shareBtn.addEventListener("pointerup", function (e) {
+        e.stopPropagation();
+        if (!navigator.share) return;
+        navigator.share({
+          title: "미래 폭염계단",
+          text: "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
+          url: location.href.split("?")[0]
+        }).catch(function () {});
+      });
+      shareBtn.addEventListener("click", function (e) { handleFallbackClick(e, function () {
+        if (!navigator.share) return;
+        navigator.share({
+          title: "미래 폭염계단",
+          text: "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
+          url: location.href.split("?")[0]
+        }).catch(function () {});
+      }); });
       pauseBtn.addEventListener("pointerup", pauseGame);
       resumeBtn.addEventListener("pointerup", resumeGame);
       pauseMainBtn.addEventListener("pointerup", quitPausedGame);
@@ -1197,6 +1258,12 @@
         console.assert(typeof initSupabase === "function", "Supabase 초기화 함수가 있어야 합니다.");
       }
 
+      history.pushState(null, "", location.href);
+      window.addEventListener("popstate", function () {
+        history.pushState(null, "", location.href);
+        if (running && !paused) pauseGame();
+      });
+
       function initGame() {
         try {
           updateSoundButtons();
@@ -1211,6 +1278,7 @@
         } catch (err) {
           console.error("초기화 오류:", err);
           gameWrap.classList.add("mainReady");
+          startOverlay.classList.remove("hidden");
           hideLoadingOverlay();
           return;
         }
