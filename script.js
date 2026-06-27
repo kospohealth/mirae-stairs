@@ -711,7 +711,9 @@
 
       function openExternalGuide(url, e) {
         if (e && e.stopPropagation) e.stopPropagation();
-        window.open(url, "_blank", "noopener");
+        // WKWebView(인앱브라우저)는 window.open을 차단하고 null을 반환할 수 있음
+        var w = window.open(url, "_blank", "noopener,noreferrer");
+        if (!w) { window.location.href = url; }
       }
 
       function openGuide(e) {

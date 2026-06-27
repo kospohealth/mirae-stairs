@@ -1,4 +1,4 @@
-@import url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css');
+/* Pretendard는 index.html <link rel="stylesheet">으로 로드 (CSS @import 직렬 로딩 방지) */
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; -webkit-touch-callout: none; text-rendering: optimizeLegibility; user-select: none; }
 input, textarea { -webkit-user-select: text; user-select: text; }
