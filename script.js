@@ -149,6 +149,7 @@
       var lastLayoutWidth = 0;
       var lastLayoutHeight = 0;
       var lastPointerActionAt = 0;
+      var lastPrunedIndex = 0;
       var scoreUploadInProgress = false;
       var currentRecordSaved = false;
       var currentPublicRankingSaved = false;
@@ -542,12 +543,13 @@
       function pruneOldSteps() {
         var pruneUntil = currentIndex - 30;
         var i;
-        for (i = 0; i < pruneUntil; i++) {
+        for (i = lastPrunedIndex; i < pruneUntil; i++) {
           if (steps[i] && steps[i].el && steps[i].el.parentNode) {
             steps[i].el.parentNode.removeChild(steps[i].el);
             steps[i].el = null;
           }
         }
+        if (pruneUntil > lastPrunedIndex) lastPrunedIndex = pruneUntil;
       }
       function ensureMoreSteps() {
         var i;
@@ -650,6 +652,7 @@
         quizPausedAt = 0;
         moving = false;
         inputLocked = false;
+        stopBgm();
         pauseOverlay.classList.add("hidden");
         quizOverlay.classList.add("hidden");
         gameOverOverlay.classList.add("hidden");
@@ -833,6 +836,7 @@
         gameStartTime = performance.now();
         lastQuizSecond = -1;
         currentIndex = 0;
+        lastPrunedIndex = 0;
         cameraY = 0;
         targetCameraY = 0;
         currentStage = "ground";
@@ -1067,7 +1071,7 @@
         updateHud();
         updateStage();
         ensureMoreSteps();
-        if (score === 5) {
+        if (score >= 5 && touchGuide.style.opacity !== "0") {
           touchGuide.style.transition = "opacity 0.8s";
           touchGuide.style.opacity = "0";
           directionGuide.style.transition = "opacity 0.8s";
