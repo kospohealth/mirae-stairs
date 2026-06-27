@@ -1040,7 +1040,7 @@
         if (!moving) return;
         var t = Math.min(1, (now - moveStartTime) / moveDuration);
         var e = easeOutCubic(t);
-        var arc = Math.sin(e * Math.PI) * 18;
+        var arc = Math.sin(t * Math.PI) * 18;
         var dir = playerTarget.x < playerStart.x ? -1 : 1;
         playerPos.x = playerStart.x + (playerTarget.x - playerStart.x) * e;
         playerPos.y = playerStart.y + (playerTarget.y - playerStart.y) * e - arc;
