@@ -150,6 +150,10 @@
       var lastLayoutHeight = 0;
       var lastPointerActionAt = 0;
       var lastPrunedIndex = 0;
+      var lastFrameTime = 0;
+      var lastTimerScale = -1;
+      var timerUrgent = false;
+      var audioPrepared = false;
       var scoreUploadInProgress = false;
       var currentRecordSaved = false;
       var currentPublicRankingSaved = false;
@@ -160,6 +164,7 @@
       var STEP_GAP_Y = 62;
       var PLAYER_BASE_RATIO = 0.68;
       var BASE_STEP_TIME = 3400;
+      var FRAME_INTERVAL = 1000 / 60;
       var HEAT_RULES_URL = "https://youtube.com/shorts/JonJSw9Eaxo?si=GrK2Yuo0xZKegQ9-";
       var HEAT_KIT_URL = "https://youtu.be/rsMf9EvUKt8?si=Hp1Ut4E_NMdFs_e0";
 
@@ -199,10 +204,10 @@
       var quizSound = new Audio("assets/quiz.wav");
       var gameOverSound = new Audio("assets/gameover.mp3");
 
-      bgm.preload = "metadata";
-      jumpSound.preload = "auto";
-      quizSound.preload = "auto";
-      gameOverSound.preload = "auto";
+      bgm.preload = "none";
+      jumpSound.preload = "none";
+      quizSound.preload = "none";
+      gameOverSound.preload = "none";
       bgm.loop = true;
       bgm.volume = 0.35;
 
@@ -210,13 +215,17 @@
       quizSound.volume = 0.55;
       gameOverSound.volume = 0.6;
 
-      [bgm, jumpSound, quizSound, gameOverSound].forEach(function (sound) {
-        try {
-          sound.load();
-        } catch (err) {
-          // 일부 모바일 브라우저는 사용자 입력 전 오디오 로드를 제한합니다.
-        }
-      });
+      function prepareAudio() {
+        if (audioPrepared) return;
+        audioPrepared = true;
+        [bgm, jumpSound, quizSound, gameOverSound].forEach(function (sound) {
+          try {
+            sound.load();
+          } catch (err) {
+            // 사용자 입력 시점에도 오디오 로드가 제한되면 재생 함수가 조용히 처리합니다.
+          }
+        });
+      }
 
       function updateSoundButtons() {
         bgmToggle.textContent = "🎵";
@@ -395,20 +404,24 @@
       }
 
       function preloadStageBackgrounds() {
-        ["ground", "sky", "space"].forEach(function (stage) {
-          var img = new Image();
-          img.src = stageImage(stage);
-        });
+        var loadLaterStages = function () {
+          ["sky", "space"].forEach(function (stage) {
+            var img = new Image();
+            img.src = stageImage(stage);
+          });
+        };
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(loadLaterStages, { timeout: 3000 });
+        } else {
+          setTimeout(loadLaterStages, 1500);
+        }
       }
 
       var criticalImages = [
         "assets/main_background.png",
         "assets/bg_stage1.png",
-        "assets/bg_stage2.png",
-        "assets/bg_stage3.png",
         "assets/mirae.png",
-        "assets/sun.png",
-        "assets/tutorial_1.png"
+        "assets/sun.png"
       ];
 
       function preloadImage(src) {
@@ -536,12 +549,12 @@
         var y = Math.floor(wrapH() * PLAYER_BASE_RATIO);
         clearWorld();
         makeStep(0, x, y, "normal");
-        // 모바일 렉 방지: 처음부터 수백 개를 만들지 않고, 앞쪽 계단만 준비한 뒤 진행 중 추가합니다.
-        for (i = 1; i < 120; i++) appendNextStep(i);
+        // 화면 주변에 필요한 계단만 만들고 진행 중 작은 묶음으로 보충합니다.
+        for (i = 1; i < 48; i++) appendNextStep(i);
       }
 
       function pruneOldSteps() {
-        var pruneUntil = currentIndex - 30;
+        var pruneUntil = currentIndex - 18;
         var i;
         for (i = lastPrunedIndex; i < pruneUntil; i++) {
           if (steps[i] && steps[i].el && steps[i].el.parentNode) {
@@ -556,9 +569,9 @@
         var start;
         var end;
         pruneOldSteps();
-        if (currentIndex <= steps.length - 45) return;
+        if (currentIndex <= steps.length - 24) return;
         start = steps.length;
-        end = start + 70;
+        end = start + 32;
         for (i = start; i < end; i++) appendNextStep(i);
       }
 
@@ -837,6 +850,9 @@
         lastQuizSecond = -1;
         currentIndex = 0;
         lastPrunedIndex = 0;
+        lastFrameTime = 0;
+        lastTimerScale = -1;
+        timerUrgent = false;
         cameraY = 0;
         targetCameraY = 0;
         currentStage = "ground";
@@ -872,6 +888,7 @@
           gameOverOverlay.classList.add("hidden");
           quizOverlay.classList.add("hidden");
           pauseOverlay.classList.add("hidden");
+          prepareAudio();
           resetGame();
           playBgm();
           animationId = requestAnimationFrame(loop);
@@ -1104,14 +1121,24 @@
       function updateTimer(now) {
         var remain = Math.max(0, stepDeadline - now);
         var ratio = remain / getStepTimeLimit();
-        timerBar.style.transform = "scaleX(" + Math.max(0, Math.min(1, ratio)) + ")";
-        timerBarWrap.classList.toggle("urgent", ratio < 0.25);
+        var scale = Math.round(Math.max(0, Math.min(1, ratio)) * 120) / 120;
+        var urgent = ratio < 0.25;
+        if (scale !== lastTimerScale) {
+          timerBar.style.transform = "scaleX(" + scale + ")";
+          lastTimerScale = scale;
+        }
+        if (urgent !== timerUrgent) {
+          timerBarWrap.classList.toggle("urgent", urgent);
+          timerUrgent = urgent;
+        }
         if (remain <= 0 && !moving) gameOver("시간 초과!");
       }
       function loop(now) {
         if (!running) return;
         animationId = requestAnimationFrame(loop);
         if (paused) return;
+        if (lastFrameTime && now - lastFrameTime < FRAME_INTERVAL * 0.75) return;
+        lastFrameTime = now;
         seconds = Math.floor((now - gameStartTime) / 1000);
         if (handleTimedQuiz()) return;
         updateBooster(now);
@@ -1159,8 +1186,8 @@
         lastLayoutHeight = height;
         var savedIndex = currentIndex;
         generateMap();
-        // generateMap이 steps[]를 0~119로 초기화하므로, savedIndex가 범위를 벗어나면 추가 생성합니다.
-        while (steps.length <= savedIndex + 45) {
+        // 현재 위치 앞쪽에 필요한 계단만 보충합니다.
+        while (steps.length <= savedIndex + 24) {
           appendNextStep(steps.length);
         }
         currentIndex = savedIndex;
