@@ -1295,7 +1295,7 @@
         e.stopPropagation();
         if (!navigator.share) return;
         navigator.share({
-          title: "미래 폭염계단",
+          title: "미래의계단 폭염편",
           text: "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
           url: location.href.split("?")[0]
         }).catch(function () {});
@@ -1303,7 +1303,7 @@
       shareBtn.addEventListener("click", function (e) { handleFallbackClick(e, function () {
         if (!navigator.share) return;
         navigator.share({
-          title: "미래 폭염계단",
+          title: "미래의계단 폭염편",
           text: "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
           url: location.href.split("?")[0]
         }).catch(function () {});
