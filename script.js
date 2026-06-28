@@ -141,8 +141,8 @@
       var moveDuration = 115;
       var stepDeadline = 0;
       var currentStepEl = null;
-      var lastHudScore = "";
-      var lastHudTime = "";
+      var lastHudScoreInt = -1;
+      var lastHudTimeInt = -1;
       var lastBoosterLabel = "";
       var currentStage = "ground";
       var activeBgLayer = "A";
@@ -150,6 +150,10 @@
       var lastLayoutHeight = 0;
       var lastPointerActionAt = 0;
       var lastPrunedIndex = 0;
+      var lastFrameTime = 0;
+      var lastTimerScale = -1;
+      var timerUrgent = false;
+      var audioPrepared = false;
       var scoreUploadInProgress = false;
       var currentRecordSaved = false;
       var currentPublicRankingSaved = false;
@@ -160,6 +164,7 @@
       var STEP_GAP_Y = 62;
       var PLAYER_BASE_RATIO = 0.68;
       var BASE_STEP_TIME = 3400;
+      var FRAME_INTERVAL = 1000 / 60;
       var HEAT_RULES_URL = "https://youtube.com/shorts/JonJSw9Eaxo?si=GrK2Yuo0xZKegQ9-";
       var HEAT_KIT_URL = "https://youtu.be/rsMf9EvUKt8?si=Hp1Ut4E_NMdFs_e0";
 
@@ -192,31 +197,36 @@
       }
 
       var bgmEnabled = safeStorageGet("mirae_bgm") !== "off" && safeStorageGet("bgmEnabled") !== "false";
-      var sfxEnabled = safeStorageGet("mirae_sfx") !== "off" && safeStorageGet("sfxEnabled") !== "false";
+      var sfxEnabled = safeStorageGet("mirae_sfx") === "on";
+      var isWebKit = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
       var bgm = new Audio("assets/bgm.mp3");
-      var jumpSound = new Audio("assets/Jump.wav");
+      var jumpSound = isWebKit ? null : new Audio("assets/Jump.wav");
       var quizSound = new Audio("assets/quiz.wav");
       var gameOverSound = new Audio("assets/gameover.mp3");
 
-      bgm.preload = "metadata";
-      jumpSound.preload = "auto";
-      quizSound.preload = "auto";
-      gameOverSound.preload = "auto";
+      bgm.preload = "none";
+      if (jumpSound) { jumpSound.preload = "none"; }
+      quizSound.preload = "none";
+      gameOverSound.preload = "none";
       bgm.loop = true;
       bgm.volume = 0.35;
 
-      jumpSound.volume = 0.45;
+      if (jumpSound) { jumpSound.volume = 0.45; }
       quizSound.volume = 0.55;
       gameOverSound.volume = 0.6;
 
-      [bgm, jumpSound, quizSound, gameOverSound].forEach(function (sound) {
-        try {
-          sound.load();
-        } catch (err) {
-          // 일부 모바일 브라우저는 사용자 입력 전 오디오 로드를 제한합니다.
-        }
-      });
+      function prepareAudio() {
+        if (audioPrepared) return;
+        audioPrepared = true;
+        [bgm, jumpSound, quizSound, gameOverSound].filter(Boolean).forEach(function (sound) {
+          try {
+            sound.load();
+          } catch (err) {
+            // 사용자 입력 시점에도 오디오 로드가 제한되면 재생 함수가 조용히 처리합니다.
+          }
+        });
+      }
 
       function updateSoundButtons() {
         bgmToggle.textContent = "🎵";
@@ -296,8 +306,14 @@
         }
       }
 
-      function wrapW() { return gameWrap.clientWidth || 360; }
-      function wrapH() { return gameWrap.clientHeight || 640; }
+      var cachedW = 360;
+      var cachedH = 640;
+      function refreshLayoutCache() {
+        cachedW = gameWrap.clientWidth || 360;
+        cachedH = gameWrap.clientHeight || 640;
+      }
+      function wrapW() { return cachedW; }
+      function wrapH() { return cachedH; }
       function isSupabaseReady() {
         // Supabase CDN은 첫 화면을 막지 않도록 async로 불러옵니다.
         // 랭킹/기록 버튼을 누르는 시점에 준비되어 있으면 여기서 다시 연결합니다.
@@ -346,15 +362,14 @@
       }
 
       function updateHud() {
-        var scoreText = String(Math.floor(score));
-        var timeText = String(seconds);
-        if (lastHudScore !== scoreText) {
-          scoreEl.textContent = scoreText;
-          lastHudScore = scoreText;
+        var floorScore = Math.floor(score);
+        if (lastHudScoreInt !== floorScore) {
+          scoreEl.textContent = String(floorScore);
+          lastHudScoreInt = floorScore;
         }
-        if (lastHudTime !== timeText) {
-          timeEl.textContent = timeText;
-          lastHudTime = timeText;
+        if (lastHudTimeInt !== seconds) {
+          timeEl.textContent = String(seconds);
+          lastHudTimeInt = seconds;
         }
         if (!booster) {
           if (lastBoosterLabel !== "⚡ x0") {
@@ -395,20 +410,24 @@
       }
 
       function preloadStageBackgrounds() {
-        ["ground", "sky", "space"].forEach(function (stage) {
-          var img = new Image();
-          img.src = stageImage(stage);
-        });
+        var loadLaterStages = function () {
+          ["sky", "space"].forEach(function (stage) {
+            var img = new Image();
+            img.src = stageImage(stage);
+          });
+        };
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(loadLaterStages, { timeout: 3000 });
+        } else {
+          setTimeout(loadLaterStages, 1500);
+        }
       }
 
       var criticalImages = [
         "assets/main_background.png",
         "assets/bg_stage1.png",
-        "assets/bg_stage2.png",
-        "assets/bg_stage3.png",
         "assets/mirae.png",
-        "assets/sun.png",
-        "assets/tutorial_1.png"
+        "assets/sun.png"
       ];
 
       function preloadImage(src) {
@@ -510,38 +529,49 @@
         if (stage === "space") showToast("우주 구간 진입!", 1000);
       }
 
-      function clearWorld() { world.innerHTML = ""; steps = []; currentStepEl = null; }
+      function clearWorld() {
+        while (world.firstChild) world.removeChild(world.firstChild);
+        steps = [];
+        currentStepEl = null;
+      }
       function clampX(x) { var margin = 70; return Math.max(margin, Math.min(wrapW() - margin, x)); }
 
-      function makeStep(index, x, y, type) {
-        var el = document.createElement("div");
-        el.className = "step";
-        el.style.left = (x - STEP_W / 2) + "px";
-        el.style.top = y + "px";
-        world.appendChild(el);
+      function makeStep(index, x, y, type, renderStep) {
+        var el = null;
+        if (renderStep !== false) {
+          el = document.createElement("div");
+          el.className = "step";
+          el.style.left = (x - STEP_W / 2) + "px";
+          el.style.top = y + "px";
+          world.appendChild(el);
+        }
         steps[index] = { index: index, x: x, y: y, type: type, el: el };
       }
 
-      function appendNextStep(index) {
+      function appendNextStep(index, renderStep) {
         var prev = steps[index - 1];
         var dir = Math.random() > 0.5 ? 1 : -1;
         var nextX = prev.x + dir * STEP_GAP_X;
         if (nextX < 70 || nextX > wrapW() - 70) nextX = prev.x - dir * STEP_GAP_X;
-        makeStep(index, clampX(nextX), prev.y - STEP_GAP_Y, "normal");
+        makeStep(index, clampX(nextX), prev.y - STEP_GAP_Y, "normal", renderStep);
       }
 
-      function generateMap() {
+      function generateMap(targetIndex) {
         var i;
+        var safeIndex = typeof targetIndex === "number" ? Math.max(0, targetIndex) : 0;
+        var renderFrom = Math.max(0, safeIndex - 18);
+        var totalSteps = Math.max(48, safeIndex + 25);
         var x = wrapW() / 2;
         var y = Math.floor(wrapH() * PLAYER_BASE_RATIO);
         clearWorld();
-        makeStep(0, x, y, "normal");
-        // 모바일 렉 방지: 처음부터 수백 개를 만들지 않고, 앞쪽 계단만 준비한 뒤 진행 중 추가합니다.
-        for (i = 1; i < 120; i++) appendNextStep(i);
+        makeStep(0, x, y, "normal", 0 >= renderFrom);
+        // 과거 발판은 좌표 데이터만 유지하고 화면 주변 발판만 DOM으로 만듭니다.
+        for (i = 1; i < totalSteps; i++) appendNextStep(i, i >= renderFrom);
+        lastPrunedIndex = renderFrom;
       }
 
       function pruneOldSteps() {
-        var pruneUntil = currentIndex - 30;
+        var pruneUntil = currentIndex - 18;
         var i;
         for (i = lastPrunedIndex; i < pruneUntil; i++) {
           if (steps[i] && steps[i].el && steps[i].el.parentNode) {
@@ -556,9 +586,9 @@
         var start;
         var end;
         pruneOldSteps();
-        if (currentIndex <= steps.length - 45) return;
+        if (currentIndex <= steps.length - 24) return;
         start = steps.length;
-        end = start + 70;
+        end = start + 32;
         for (i = start; i < end; i++) appendNextStep(i);
       }
 
@@ -575,19 +605,25 @@
         currentStepEl = steps[currentIndex] ? steps[currentIndex].el : null;
         if (currentStepEl) currentStepEl.classList.add("current");
       }
-      function renderWorld() { world.style.transform = "translate3d(0," + cameraY + "px,0)"; }
+      function renderWorld() { world.style.transform = "translate3d(0," + Math.round(cameraY) + "px,0)"; }
       function renderPlayer(extraScale, tilt) {
         if (typeof extraScale !== "number") extraScale = 1;
         if (typeof tilt !== "number") tilt = 0;
-        player.style.transform = "translate3d(" + playerPos.x + "px, " + (playerPos.y + cameraY) + "px, 0) translate(-50%, -100%) scale(" + extraScale + ") rotate(" + tilt + "deg)";
+        player.style.transform = "translate3d(" + Math.round(playerPos.x) + "px, " + Math.round(playerPos.y + cameraY) + "px, 0) translate(-50%, -100%) scale(" + extraScale.toFixed(3) + ") rotate(" + tilt + "deg)";
       }
       function snapToCurrentStep() {
         var s = currentStep();
         if (!s) return;
+        moving = false;
+        inputLocked = false;
         cameraY = wrapH() * PLAYER_BASE_RATIO - s.y;
         targetCameraY = cameraY;
         playerPos.x = s.x;
         playerPos.y = s.y;
+        playerStart.x = s.x;
+        playerStart.y = s.y;
+        playerTarget.x = s.x;
+        playerTarget.y = s.y;
         renderWorld();
         renderPlayer(1, 0);
         markCurrent();
@@ -639,6 +675,7 @@
         pauseStartedAt = 0;
         pauseOverlay.classList.add("hidden");
         updatePauseButtonVisibility();
+        startLoop();
       }
 
       function quitPausedGame(e) {
@@ -777,8 +814,8 @@
         var nickname = nicknameInput.value.trim().slice(0, 8);
         var employeeId = employeeInput.value.trim().slice(0, 12);
         var finalScore = Math.floor(score);
-        var publicResult = { ok: true, skipped: true };
-        var sheetResult = { ok: true, skipped: true };
+        var publicResult = { ok: currentPublicRankingSaved, skipped: !currentPublicRankingSaved };
+        var sheetResult = { ok: currentAdminSheetSaved, skipped: !currentAdminSheetSaved };
 
         if (scoreUploadInProgress) { showToast("이미 기록 중이에요!", 1200); return; }
         if (currentRecordSaved) { showToast("이미 업로드된 기록이에요!", 1300); return; }
@@ -790,36 +827,48 @@
         saveScoreBtn.textContent = "기록 중...";
         if (!currentPublicRankingSaved) {
           publicResult = await savePublicRanking(nickname, finalScore);
-          currentPublicRankingSaved = publicResult.ok || publicResult.skipped;
+          currentPublicRankingSaved = publicResult.ok;
         }
         if (!currentAdminSheetSaved) {
           sheetResult = await saveAdminSheet(nickname, employeeId, finalScore, seconds, currentRecordCreatedAt);
-          currentAdminSheetSaved = sheetResult.ok || sheetResult.skipped;
+          currentAdminSheetSaved = sheetResult.ok;
         }
 
-        if ((!publicResult.ok && !publicResult.skipped) || (!sheetResult.ok && !sheetResult.skipped)) {
-          showToast("저장 실패!", 1400);
-          scoreUploadInProgress = false;
-          saveScoreBtn.disabled = false;
-          saveScoreBtn.textContent = "기록하기";
-          return;
-        }
-        if (publicResult.skipped && sheetResult.skipped) {
-          showToast("저장 설정 필요!", 1400);
-          scoreUploadInProgress = false;
-          saveScoreBtn.disabled = false;
-          saveScoreBtn.textContent = "기록하기";
-          return;
-        }
-        currentRecordSaved = true;
         scoreUploadInProgress = false;
+        saveScoreBtn.disabled = false;
+
+        if ((!publicResult.ok && !publicResult.skipped) || (!sheetResult.ok && !sheetResult.skipped)) {
+          showToast("일부 저장에 실패했어요. 다시 시도해주세요.", 2000);
+          saveScoreBtn.textContent = currentAdminSheetSaved && !currentPublicRankingSaved
+            ? "랭킹 반영 재시도"
+            : (currentPublicRankingSaved && !currentAdminSheetSaved ? "기록 접수 재시도" : "기록하기");
+          return;
+        }
+        if (currentAdminSheetSaved && !currentPublicRankingSaved) {
+          showToast("기록은 접수됐지만 공개 랭킹 반영은 지연될 수 있어요.", 2800);
+          saveScoreBtn.textContent = "랭킹 반영 재시도";
+          return;
+        }
+        if (currentPublicRankingSaved && !currentAdminSheetSaved) {
+          showToast("공개 랭킹은 반영됐지만 기록 접수가 완료되지 않았어요.", 2400);
+          saveScoreBtn.textContent = "기록 접수 재시도";
+          return;
+        }
+        if (!currentPublicRankingSaved && !currentAdminSheetSaved) {
+          showToast("저장 설정 필요!", 1600);
+          saveScoreBtn.textContent = "기록하기";
+          return;
+        }
+
+        currentRecordSaved = true;
         saveScoreBtn.textContent = "기록 완료";
-        showToast("기록 완료!", 1300);
+        showToast("기록과 공개 랭킹 반영 완료!", 1600);
         await loadRanking();
       }
 
       function resetGame() {
         if (animationId !== null) cancelAnimationFrame(animationId);
+        animationId = null;
         stopBgm();
         running = true;
         paused = false;
@@ -837,11 +886,17 @@
         lastQuizSecond = -1;
         currentIndex = 0;
         lastPrunedIndex = 0;
+        lastFrameTime = 0;
+        lastTimerScale = -1;
+        lastHudScoreInt = -1;
+        lastHudTimeInt = -1;
+        timerUrgent = false;
         cameraY = 0;
         targetCameraY = 0;
         currentStage = "ground";
-        lastLayoutWidth = wrapW();
-        lastLayoutHeight = wrapH();
+        refreshLayoutCache();
+        lastLayoutWidth = cachedW;
+        lastLayoutHeight = cachedH;
         pauseOverlay.classList.add("hidden");
         setGameWrapStageClass("ground");
         setStageBackground("ground", true);
@@ -872,9 +927,22 @@
           gameOverOverlay.classList.add("hidden");
           quizOverlay.classList.add("hidden");
           pauseOverlay.classList.add("hidden");
+          prepareAudio();
           resetGame();
+          // 2프레임 대기 중 터치 입력 차단 (resetGame이 inputLocked=false로 열어두므로 재잠금)
+          inputLocked = true;
+          showToast("준비!", 350);
           playBgm();
-          animationId = requestAnimationFrame(loop);
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              // DOM 커밋·페인트 완료 후 타이머/입력을 실제 루프 기준으로 재설정
+              gameStartTime = performance.now();
+              resetDeadline();
+              lastFrameTime = 0;
+              inputLocked = false;
+              startLoop();
+            });
+          });
         } catch (err) {
           console.error("게임 시작 오류:", err);
           showToast("게임을 시작할 수 없어요. 페이지를 새로고침 해주세요.", 3500);
@@ -945,6 +1013,7 @@
           else showToast("오답! 부스터 없음");
           paused = false;
           updatePauseButtonVisibility();
+          startLoop();
           return;
         }
         if (quizMode === "revive") {
@@ -955,6 +1024,7 @@
             snapToCurrentStep();
             resetDeadline();
             updatePauseButtonVisibility();
+            startLoop();
           } else {
             endGame();
           }
@@ -1079,7 +1149,7 @@
         }
       }
       function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-      function updateMovement(now) {
+      function updateMovement(now, dt) {
         if (!moving) return;
         var t = Math.min(1, (now - moveStartTime) / moveDuration);
         var e = easeOutCubic(t);
@@ -1087,7 +1157,8 @@
         var dir = playerTarget.x < playerStart.x ? -1 : 1;
         playerPos.x = playerStart.x + (playerTarget.x - playerStart.x) * e;
         playerPos.y = playerStart.y + (playerTarget.y - playerStart.y) * e - arc;
-        cameraY = cameraY + (targetCameraY - cameraY) * 0.32;
+        var camAlpha = 1 - Math.pow(0.68, dt / 16.67);
+        cameraY = cameraY + (targetCameraY - cameraY) * camAlpha;
         renderWorld();
         renderPlayer(1 + Math.sin(e * Math.PI) * 0.08, dir * 8);
         if (t >= 1) {
@@ -1104,18 +1175,32 @@
       function updateTimer(now) {
         var remain = Math.max(0, stepDeadline - now);
         var ratio = remain / getStepTimeLimit();
-        timerBar.style.transform = "scaleX(" + Math.max(0, Math.min(1, ratio)) + ")";
-        timerBarWrap.classList.toggle("urgent", ratio < 0.25);
+        var scale = Math.round(Math.max(0, Math.min(1, ratio)) * 120) / 120;
+        var urgent = ratio < 0.25;
+        if (scale !== lastTimerScale) {
+          timerBar.style.transform = "scaleX(" + scale + ")";
+          lastTimerScale = scale;
+        }
+        if (urgent !== timerUrgent) {
+          timerBarWrap.classList.toggle("urgent", urgent);
+          timerUrgent = urgent;
+        }
         if (remain <= 0 && !moving) gameOver("시간 초과!");
       }
-      function loop(now) {
-        if (!running) return;
+      function startLoop() {
+        if (!running || paused || animationId !== null) return;
         animationId = requestAnimationFrame(loop);
-        if (paused) return;
+      }
+      function loop(now) {
+        animationId = null;
+        if (!running || paused) return;
+        animationId = requestAnimationFrame(loop);
+        var dt = lastFrameTime > 0 ? Math.min(33, now - lastFrameTime) : 16.67;
+        lastFrameTime = now;
         seconds = Math.floor((now - gameStartTime) / 1000);
         if (handleTimedQuiz()) return;
         updateBooster(now);
-        updateMovement(now);
+        updateMovement(now, dt);
         updateTimer(now);
         updateHud();
       }
@@ -1149,8 +1234,9 @@
         if (e.key === "ArrowRight") beginMoveToNext("right");
       });
       window.addEventListener("resize", function () {
-        var width = wrapW();
-        var height = wrapH();
+        refreshLayoutCache();
+        var width = cachedW;
+        var height = cachedH;
         if (!running) return;
         // 모바일 브라우저 주소창이 접히고 펴질 때 resize가 자주 발생합니다.
         // 아주 작은 높이 변화마다 맵 전체를 다시 만들면 플레이 중 끊김이 생겨서 의미 있는 변화만 처리합니다.
@@ -1158,13 +1244,17 @@
         lastLayoutWidth = width;
         lastLayoutHeight = height;
         var savedIndex = currentIndex;
-        generateMap();
-        // generateMap이 steps[]를 0~119로 초기화하므로, savedIndex가 범위를 벗어나면 추가 생성합니다.
-        while (steps.length <= savedIndex + 45) {
-          appendNextStep(steps.length);
-        }
+        generateMap(savedIndex);
         currentIndex = savedIndex;
         snapToCurrentStep();
+        resetDeadline();
+      });
+
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden && running && !paused) {
+          lastFrameTime = 0;
+          if (animationId === null) startLoop();
+        }
       });
 
       startOverlay.addEventListener("pointerdown", stopOverlayTouch);
@@ -1205,7 +1295,7 @@
         e.stopPropagation();
         if (!navigator.share) return;
         navigator.share({
-          title: "미래 폭염계단",
+          title: "미래의계단 폭염편",
           text: "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
           url: location.href.split("?")[0]
         }).catch(function () {});
@@ -1213,7 +1303,7 @@
       shareBtn.addEventListener("click", function (e) { handleFallbackClick(e, function () {
         if (!navigator.share) return;
         navigator.share({
-          title: "미래 폭염계단",
+          title: "미래의계단 폭염편",
           text: "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
           url: location.href.split("?")[0]
         }).catch(function () {});
@@ -1271,8 +1361,9 @@
           setGameWrapStageClass("ground");
           setStageBackground("ground", true);
           renderDecor("ground");
-          lastLayoutWidth = wrapW();
-          lastLayoutHeight = wrapH();
+          refreshLayoutCache();
+          lastLayoutWidth = cachedW;
+          lastLayoutHeight = cachedH;
           updatePauseButtonVisibility();
         } catch (err) {
           console.error("초기화 오류:", err);

@@ -29,6 +29,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       touch-action: none;
       background: linear-gradient(180deg, #ff7a18 0%, #ffb703 18%, #7dd3fc 45%, #bae6fd 68%, #fde68a 100%);
       box-shadow: 0 22px 60px rgba(21,37,67,.26);
+      transform: translateZ(0);
     }
     #gameWrap::before {
       content: "";
@@ -70,10 +71,9 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       padding: 22px 20px;
       border: 1px solid rgba(230,205,160,.9);
       border-radius: 22px;
-      background: rgba(255,251,242,.86);
+      background: rgba(255,251,242,.97);
       box-shadow: 0 14px 30px rgba(91,58,20,.22);
       text-align: center;
-      backdrop-filter: blur(8px);
     }
 
     .loadingTitle {
@@ -249,8 +249,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       font-weight: 900;
       line-height: 1;
       box-shadow: inset 0 2px 0 rgba(255,255,255,.34), 0 4px 10px rgba(21,37,67,.10);
-      backdrop-filter: blur(8px);
-      transition: transform .08s ease, box-shadow .08s ease, filter .08s ease, opacity .08s ease;
+      transition: transform .08s ease, box-shadow .08s ease, opacity .08s ease;
     }
 
     /* OFF 상태는 흐리게 보여서 현재 상태를 바로 알 수 있게 합니다. */
@@ -283,20 +282,30 @@ input, textarea { -webkit-user-select: text; user-select: text; }
         height: 36px;
         padding: 0 8px;
       }
-      .scoreMetric { min-width: 94px; }
-      .timeMetric { min-width: 82px; }
+      .scoreMetric { min-width: 90px; }
+      .timeMetric { min-width: 80px; }
       #score, #time { font-size: 20px; }
       #boosterText {
-        min-width: 56px;
-        max-width: 72px;
+        min-width: 54px;
+        max-width: 70px;
         font-size: 16px;
       }
       #soundControls { gap: 4px; }
       .soundBtn {
-        width: 40px;
-        height: 40px;
+        width: 38px;
+        height: 38px;
         font-size: 16px;
       }
+    }
+
+    /* 396~395px(iPhone·Galaxy 390px대): 한 칸 더 압축 */
+    @media (max-width: 395px) {
+      #hud { gap: 4px; }
+      .scoreMetric { min-width: 84px; }
+      .timeMetric { min-width: 72px; }
+      #boosterText { min-width: 48px; max-width: 64px; font-size: 15px; }
+      #soundControls { gap: 3px; }
+      .soundBtn { width: 34px; height: 34px; font-size: 15px; }
     }
 
     /* 아주 좁은 화면: 마지막 안전장치 */
@@ -320,16 +329,15 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       }
     }
 
-    #gameArea { position: absolute; inset: 0; overflow: hidden; z-index: 3; }
-    #world { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 5; will-change: transform; }
+    #gameArea { position: absolute; inset: 0; overflow: hidden; z-index: 3; contain: layout paint; pointer-events: none; }
+    #world { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 5; will-change: transform; pointer-events: none; }
     .step {
       position: absolute;
+      contain: layout style;
       width: 100px;
       height: 36px;
       border-radius: 7px;
-      /* 베이지/황토 석재 계단 느낌: 위는 밝게, 아래로 갈수록 진하게 */
       background:
-        /* 표면 노이즈: 아주 미세한 결 */
         repeating-linear-gradient(
           90deg,
           transparent 0px,
@@ -344,13 +352,11 @@ input, textarea { -webkit-user-select: text; user-select: text; }
           #b88743 100%
         );
       border: 1.5px solid rgba(100,60,10,.28);
-      /* 하단 그림자는 석재 음영처럼 자연스럽게 */
       box-shadow:
         0 5px 0 rgba(90,55,10,.45),
         0 8px 14px rgba(34,24,8,.20);
       z-index: 6;
     }
-    /* 상단 하이라이트: 얇고 부드럽게 */
     .step::before {
       content: "";
       position: absolute;
@@ -361,7 +367,6 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       border-radius: 3px;
       background: rgba(255,252,220,.52);
     }
-    /* 하단 내부 음영선 (돌 아랫면 느낌) */
     .step::after {
       content: "";
       position: absolute;
@@ -372,7 +377,6 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       border-radius: 0 0 6px 6px;
       background: rgba(80,40,5,.15);
     }
-    /* 현재 선택 발판: 부드러운 황금빛 테두리 */
     .step.current {
       outline: 2.5px solid rgba(255,240,160,.72);
       outline-offset: 3px;
@@ -388,6 +392,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       height: 92px;
       background: url("assets/mirae.png") center / contain no-repeat;
       z-index: 22;
+      pointer-events: none;
 
       transform: translate(-50%, -100%);
 
@@ -398,7 +403,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
     #timerBarWrap { position: absolute; left: 20px; right: 20px; bottom: max(20px, calc(env(safe-area-inset-bottom) + 8px)); height: 16px; background: var(--cream-soft); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; z-index: 32; box-shadow: var(--soft-shadow); transition: box-shadow .2s; }
 @keyframes urgentPulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
 #timerBarWrap.urgent #timerBar { animation: urgentPulse .55s ease-in-out infinite; }
-    #timerBar { width: 100%; height: 100%; background: linear-gradient(90deg, #22c55e, #facc15, #fb7185); transform-origin: left center; }
+    #timerBar { width: 100%; height: 100%; background: linear-gradient(90deg, #22c55e, #facc15, #fb7185); transform-origin: left center; will-change: transform; }
     #directionGuide { position: absolute; left: 50px; right: 50px; bottom: max(84px, calc(env(safe-area-inset-bottom) + 72px)); z-index: 32; display: flex; justify-content: space-between; pointer-events: none; }
     .guideKey {
       width: 62px;
@@ -426,7 +431,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
     #touchGuide { position: absolute; bottom: max(48px, calc(env(safe-area-inset-bottom) + 36px)); left: 50%; transform: translateX(-50%); z-index: 32; font-size: 12px; font-weight: 900; background: var(--cream-soft); color: var(--ink); padding: 8px 13px; white-space: nowrap; border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--soft-shadow); }
     #toast { position: absolute; z-index: 45; top: 84px; left: 50%; transform: translateX(-50%); padding: 10px 14px; background: var(--cream-soft); color: var(--red); font-weight: 900; text-align: center; min-width: 170px; pointer-events: none; border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
 
-    .overlay { position: absolute; inset: 0; z-index: 60; background: rgba(20,31,54,.50); display: flex; align-items: center; justify-content: center; padding: 28px; backdrop-filter: blur(12px) saturate(1.08); }
+    .overlay { position: absolute; inset: 0; z-index: 60; background: rgba(15,24,44,.82); display: flex; align-items: center; justify-content: center; padding: 28px; }
     .hidden { display: none !important; }
     .panel { position: relative; width: 100%; max-width: 360px; background: linear-gradient(to bottom, #fffdf1 0%, #fff4d6 100%); color: var(--ink); padding: 30px 24px 24px; text-align: center; box-shadow: inset 0 5px 0 rgba(255,255,255,.74), 0 10px 0 rgba(186,137,69,.38), 0 24px 42px rgba(0,0,0,.24); border: 1px solid rgba(116,80,38,.16); border-radius: 28px; animation: popupIn .18s ease-out both; }
     .panel::before { content: ""; position: absolute; left: 18px; right: 18px; top: 8px; height: 18px; border-radius: 999px; background: linear-gradient(rgba(255,255,255,.72), rgba(255,255,255,0)); pointer-events: none; }
@@ -616,7 +621,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
    버튼 크기와 스타일은 유지하고, 메뉴 묶음 위치만 아래로 내려 로고와 겹치지 않게 합니다. */
     @media (max-width: 480px) {
       .mainPanel {
-        bottom: max(clamp(30px, 5%, 56px), calc(env(safe-area-inset-bottom) + 14px));
+        bottom: max(clamp(14px, 3%, 40px), calc(env(safe-area-inset-bottom) + 8px));
       }
 
       .menu-container {
@@ -869,7 +874,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
     }
     input:focus { border-color: #ff9f1c; }
     input::placeholder { color: #a3947f; }
-    .choiceBtn:active, button:active { transform: translateY(1px); box-shadow: 0 5px 14px rgba(21,37,67,.13); filter: brightness(.99); }
+    .choiceBtn:active, button:active { transform: translateY(1px); box-shadow: 0 5px 14px rgba(21,37,67,.13); }
 
 #rankingBox { text-align: left; margin: 14px 0; padding: 12px; background: rgba(255,255,255,.5); border: 1px solid var(--line); border-radius: 16px; font-weight: 900; line-height: 1.55; font-size: 14px; }
 .rankingList { text-align: left; margin: 14px 0; padding: 12px; background: rgba(255,255,255,.5); border: 1px solid var(--line); border-radius: 16px; font-weight: 900; line-height: 1.55; font-size: 14px; }
@@ -919,88 +924,95 @@ input, textarea { -webkit-user-select: text; user-select: text; }
    Game Over 팝업만 10~15% 정도 압축해서 하단 버튼이 잘리지 않도록 조정합니다. */
 @media (max-width: 480px) {
   #gameOverOverlay {
-    padding: 12px 16px;
+    padding: 14px 16px;
     align-items: center;
   }
 
   #gameOverOverlay .panel {
     max-width: 316px;
-    max-height: calc(100svh - 24px);
-    padding: 18px 18px 16px;
+    max-height: 100%;
+    padding: 16px 18px 14px;
     border-radius: 24px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
   #gameOverOverlay .panel h2 {
-    min-height: 30px;
-    margin-bottom: 12px;
-    padding: 4px 14px;
-    font-size: 22px;
+    min-height: 28px;
+    margin-bottom: 8px;
+    padding: 3px 12px;
+    font-size: 21px;
   }
 
   #finalText {
-    gap: 2px;
-    margin: 0 0 7px;
+    gap: 1px;
+    margin: 0 0 5px;
   }
 
-  .resultLabel { font-size: 15px; }
+  .resultLabel { font-size: 14px; }
 
   .resultScore {
-    font-size: 54px;
-    margin: 4px 0 8px;
+    font-size: 50px;
+    margin: 2px 0 6px;
   }
 
-  .resultTime { font-size: 17px; }
+  .resultTime { font-size: 16px; }
 
   #gameOverOverlay #rankingBox {
-    margin: 7px 0;
-    padding: 7px;
-    border-radius: 13px;
+    margin: 5px 0;
+    padding: 6px;
+    border-radius: 12px;
   }
 
   #gameOverOverlay .rankingTitle {
-    margin-bottom: 4px;
-    font-size: 11.5px;
+    margin-bottom: 3px;
+    font-size: 11px;
   }
 
   #gameOverOverlay .rankingTable {
     font-size: 11px;
-    border-radius: 10px;
+    border-radius: 9px;
   }
 
   #gameOverOverlay .rankingTable th,
   #gameOverOverlay .rankingTable td {
-    padding: 4px 5px;
-    line-height: 1.22;
+    padding: 3px 5px;
+    line-height: 1.2;
   }
 
   #gameOverOverlay input {
-    height: 40px;
+    height: 38px;
     padding: 0 12px;
-    margin-top: 7px;
-    border-radius: 12px;
+    margin-top: 6px;
+    border-radius: 11px;
     font-size: 13px;
   }
 
   #gameOverOverlay #saveScoreBtn {
-    height: 48px;
-    margin-top: 10px;
-    border-radius: 14px;
-    font-size: 18px;
-    box-shadow: inset 0 3px 0 rgba(255,255,255,.45), 0 5px 0 #a13600, 0 8px 7px rgba(0,0,0,.18);
+    height: 42px;
+    margin-top: 8px;
+    border-radius: 13px;
+    font-size: 17px;
+    box-shadow: inset 0 3px 0 rgba(255,255,255,.45), 0 5px 0 #a13600, 0 7px 6px rgba(0,0,0,.18);
+  }
+
+  #shareBtn {
+    height: 42px;
+    margin-top: 8px;
+    border-radius: 12px;
+    font-size: 15px;
   }
 
   #gameOverOverlay .gameOverActions {
-    gap: 8px;
+    gap: 7px;
     margin-top: 8px;
   }
 
   #gameOverOverlay #restartBtn,
   #gameOverOverlay #gameOverMainBtn {
-    height: 42px;
-    border-radius: 12px;
-    font-size: 15px;
+    height: 40px;
+    border-radius: 11px;
+    font-size: 14px;
     box-shadow: inset 0 2px 0 rgba(255,255,255,1), 0 4px 0 #d6c2a1, 0 6px 5px rgba(0,0,0,.10);
   }
 }
