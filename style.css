@@ -988,14 +988,14 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 
   #shareBtn {
     height: 42px;
-    margin-top: 7px;
+    margin-top: 8px;
     border-radius: 12px;
     font-size: 15px;
   }
 
   #gameOverOverlay .gameOverActions {
     gap: 7px;
-    margin-top: 7px;
+    margin-top: 8px;
   }
 
   #gameOverOverlay #restartBtn,
