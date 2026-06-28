@@ -579,11 +579,11 @@
         clearWorld();
         makeStep(0, x, y, "normal");
         // 첫 30개만 동기 생성해 startGame 블로킹을 최소화. ensureMoreSteps가 이후 추가.
-        for (i = 1; i < 30; i++) appendNextStep(i);
+        for (i = 1; i < 20; i++) appendNextStep(i);
       }
 
       function pruneOldSteps() {
-        var pruneUntil = currentIndex - 20;
+        var pruneUntil = currentIndex - 8;
         var s;
         while (lastPrunedIndex < pruneUntil) {
           s = steps[lastPrunedIndex];
@@ -600,9 +600,9 @@
         var start;
         var end;
         pruneOldSteps();
-        if (currentIndex <= steps.length - 45) return;
+        if (currentIndex <= steps.length - 20) return;
         start = steps.length;
-        end = start + 70;
+        end = start + 16;
         for (i = start; i < end; i++) appendNextStep(i);
       }
 
