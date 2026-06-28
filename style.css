@@ -327,10 +327,53 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       width: 100px;
       height: 36px;
       border-radius: 7px;
-      background: linear-gradient(180deg, #f5dfa0 0%, #e8c97a 38%, #d4a94e 72%, #b88743 100%);
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px,
+          transparent 9px,
+          rgba(120,80,30,.04) 9px,
+          rgba(120,80,30,.04) 10px
+        ),
+        linear-gradient(180deg,
+          #f5dfa0 0%,
+          #e8c97a 38%,
+          #d4a94e 72%,
+          #b88743 100%
+        );
       border: 1.5px solid rgba(100,60,10,.28);
-      box-shadow: 0 5px 0 rgba(90,55,10,.55), 0 8px 14px rgba(60,30,5,.30);
+      box-shadow:
+        0 5px 0 rgba(90,55,10,.45),
+        0 8px 14px rgba(34,24,8,.20);
       z-index: 6;
+    }
+    .step::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      top: 4px;
+      height: 4px;
+      border-radius: 3px;
+      background: rgba(255,252,220,.52);
+    }
+    .step::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 10px;
+      border-radius: 0 0 6px 6px;
+      background: rgba(80,40,5,.15);
+    }
+    .step.current {
+      outline: 2.5px solid rgba(255,240,160,.72);
+      outline-offset: 3px;
+      box-shadow:
+        0 5px 0 rgba(90,55,10,.45),
+        0 8px 14px rgba(34,24,8,.20),
+        0 0 0 5px rgba(255,220,80,.14);
     }
 
     #player {
