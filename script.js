@@ -136,6 +136,7 @@
       var lastPrunedIndex = 0;
       var cachedWrapRect = null;
       var lastTimerRatio = -1;
+      var lastFrameTime = 0;
       var autoPaused = false;
       var audioUnlocked = false;
       var scoreUploadInProgress = false;
@@ -884,6 +885,7 @@
         currentIndex = 0;
         lastPrunedIndex = 0;
         lastTimerRatio = -1;
+        lastFrameTime = 0;
         cameraY = 0;
         targetCameraY = 0;
         currentStage = "ground";
@@ -1117,7 +1119,7 @@
         ensureMoreSteps();
       }
       function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-      function updateMovement(now) {
+      function updateMovement(now, dt) {
         if (!moving) return;
         var t = Math.min(1, (now - moveStartTime) / moveDuration);
         var e = easeOutCubic(t);
@@ -1125,7 +1127,9 @@
         var dir = playerTarget.x < playerStart.x ? -1 : 1;
         playerPos.x = playerStart.x + (playerTarget.x - playerStart.x) * e;
         playerPos.y = playerStart.y + (playerTarget.y - playerStart.y) * e - arc;
-        cameraY = cameraY + (targetCameraY - cameraY) * 0.32;
+        // time-based lerp: same feel as 0.32/frame at 60fps, capped so GC freezes don't teleport camera
+        var camAlpha = 1 - Math.pow(0.68, dt / 16.67);
+        cameraY = cameraY + (targetCameraY - cameraY) * camAlpha;
         renderWorld();
         renderPlayer(1 + Math.sin(e * Math.PI) * 0.08, dir * 8);
         if (t >= 1) {
@@ -1151,11 +1155,14 @@
       function loop(now) {
         if (!running) return;
         animationId = requestAnimationFrame(loop);
-        if (paused) return;
+        if (paused) { lastFrameTime = 0; return; }
+        // cap dt at 50ms so GC pauses don't cause camera teleport
+        var dt = lastFrameTime > 0 ? Math.min(50, now - lastFrameTime) : 16.67;
+        lastFrameTime = now;
         seconds = Math.floor((now - gameStartTime) / 1000);
         if (handleTimedQuiz()) return;
         updateBooster(now);
-        updateMovement(now);
+        updateMovement(now, dt);
         updateTimer(now);
         updateHud();
       }
