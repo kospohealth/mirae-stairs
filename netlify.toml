@@ -1,0 +1,12 @@
+[build]
+  publish = "."
+  command = ""
+
+[context.production]
+  publish = "."
+
+[context."claude/game-campaign-readiness-cglgs3"]
+  publish = "."
+
+[context."codex/safari-runtime-performance"]
+  publish = "."

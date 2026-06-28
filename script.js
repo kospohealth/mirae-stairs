@@ -141,8 +141,8 @@
       var moveDuration = 115;
       var stepDeadline = 0;
       var currentStepEl = null;
-      var lastHudScore = "";
-      var lastHudTime = "";
+      var lastHudScoreInt = -1;
+      var lastHudTimeInt = -1;
       var lastBoosterLabel = "";
       var currentStage = "ground";
       var activeBgLayer = "A";
@@ -197,7 +197,7 @@
       }
 
       var bgmEnabled = safeStorageGet("mirae_bgm") !== "off" && safeStorageGet("bgmEnabled") !== "false";
-      var sfxEnabled = safeStorageGet("mirae_sfx") !== "off" && safeStorageGet("sfxEnabled") !== "false";
+      var sfxEnabled = safeStorageGet("mirae_sfx") === "on";
 
       var bgm = new Audio("assets/bgm.mp3");
       var jumpSound = new Audio("assets/Jump.wav");
@@ -305,8 +305,14 @@
         }
       }
 
-      function wrapW() { return gameWrap.clientWidth || 360; }
-      function wrapH() { return gameWrap.clientHeight || 640; }
+      var cachedW = 360;
+      var cachedH = 640;
+      function refreshLayoutCache() {
+        cachedW = gameWrap.clientWidth || 360;
+        cachedH = gameWrap.clientHeight || 640;
+      }
+      function wrapW() { return cachedW; }
+      function wrapH() { return cachedH; }
       function isSupabaseReady() {
         // Supabase CDN은 첫 화면을 막지 않도록 async로 불러옵니다.
         // 랭킹/기록 버튼을 누르는 시점에 준비되어 있으면 여기서 다시 연결합니다.
@@ -355,15 +361,14 @@
       }
 
       function updateHud() {
-        var scoreText = String(Math.floor(score));
-        var timeText = String(seconds);
-        if (lastHudScore !== scoreText) {
-          scoreEl.textContent = scoreText;
-          lastHudScore = scoreText;
+        var floorScore = Math.floor(score);
+        if (lastHudScoreInt !== floorScore) {
+          scoreEl.textContent = String(floorScore);
+          lastHudScoreInt = floorScore;
         }
-        if (lastHudTime !== timeText) {
-          timeEl.textContent = timeText;
-          lastHudTime = timeText;
+        if (lastHudTimeInt !== seconds) {
+          timeEl.textContent = String(seconds);
+          lastHudTimeInt = seconds;
         }
         if (!booster) {
           if (lastBoosterLabel !== "⚡ x0") {
@@ -595,11 +600,11 @@
         currentStepEl = steps[currentIndex] ? steps[currentIndex].el : null;
         if (currentStepEl) currentStepEl.classList.add("current");
       }
-      function renderWorld() { world.style.transform = "translate3d(0," + cameraY + "px,0)"; }
+      function renderWorld() { world.style.transform = "translate3d(0," + Math.round(cameraY) + "px,0)"; }
       function renderPlayer(extraScale, tilt) {
         if (typeof extraScale !== "number") extraScale = 1;
         if (typeof tilt !== "number") tilt = 0;
-        player.style.transform = "translate3d(" + playerPos.x + "px, " + (playerPos.y + cameraY) + "px, 0) translate(-50%, -100%) scale(" + extraScale + ") rotate(" + tilt + "deg)";
+        player.style.transform = "translate3d(" + Math.round(playerPos.x) + "px, " + Math.round(playerPos.y + cameraY) + "px, 0) translate(-50%, -100%) scale(" + extraScale.toFixed(3) + ") rotate(" + tilt + "deg)";
       }
       function snapToCurrentStep() {
         var s = currentStep();
@@ -878,12 +883,15 @@
         lastPrunedIndex = 0;
         lastFrameTime = 0;
         lastTimerScale = -1;
+        lastHudScoreInt = -1;
+        lastHudTimeInt = -1;
         timerUrgent = false;
         cameraY = 0;
         targetCameraY = 0;
         currentStage = "ground";
-        lastLayoutWidth = wrapW();
-        lastLayoutHeight = wrapH();
+        refreshLayoutCache();
+        lastLayoutWidth = cachedW;
+        lastLayoutHeight = cachedH;
         pauseOverlay.classList.add("hidden");
         setGameWrapStageClass("ground");
         setStageBackground("ground", true);
@@ -1124,7 +1132,7 @@
         }
       }
       function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-      function updateMovement(now) {
+      function updateMovement(now, dt) {
         if (!moving) return;
         var t = Math.min(1, (now - moveStartTime) / moveDuration);
         var e = easeOutCubic(t);
@@ -1132,7 +1140,8 @@
         var dir = playerTarget.x < playerStart.x ? -1 : 1;
         playerPos.x = playerStart.x + (playerTarget.x - playerStart.x) * e;
         playerPos.y = playerStart.y + (playerTarget.y - playerStart.y) * e - arc;
-        cameraY = cameraY + (targetCameraY - cameraY) * 0.32;
+        var camAlpha = 1 - Math.pow(0.68, dt / 16.67);
+        cameraY = cameraY + (targetCameraY - cameraY) * camAlpha;
         renderWorld();
         renderPlayer(1 + Math.sin(e * Math.PI) * 0.08, dir * 8);
         if (t >= 1) {
@@ -1169,12 +1178,12 @@
         animationId = null;
         if (!running || paused) return;
         animationId = requestAnimationFrame(loop);
-        if (lastFrameTime && now - lastFrameTime < FRAME_INTERVAL * 0.75) return;
+        var dt = lastFrameTime > 0 ? Math.min(33, now - lastFrameTime) : 16.67;
         lastFrameTime = now;
         seconds = Math.floor((now - gameStartTime) / 1000);
         if (handleTimedQuiz()) return;
         updateBooster(now);
-        updateMovement(now);
+        updateMovement(now, dt);
         updateTimer(now);
         updateHud();
       }
@@ -1208,8 +1217,9 @@
         if (e.key === "ArrowRight") beginMoveToNext("right");
       });
       window.addEventListener("resize", function () {
-        var width = wrapW();
-        var height = wrapH();
+        refreshLayoutCache();
+        var width = cachedW;
+        var height = cachedH;
         if (!running) return;
         // 모바일 브라우저 주소창이 접히고 펴질 때 resize가 자주 발생합니다.
         // 아주 작은 높이 변화마다 맵 전체를 다시 만들면 플레이 중 끊김이 생겨서 의미 있는 변화만 처리합니다.
@@ -1221,6 +1231,13 @@
         currentIndex = savedIndex;
         snapToCurrentStep();
         resetDeadline();
+      });
+
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden && running && !paused) {
+          lastFrameTime = 0;
+          if (animationId === null) startLoop();
+        }
       });
 
       startOverlay.addEventListener("pointerdown", stopOverlayTouch);
@@ -1327,8 +1344,9 @@
           setGameWrapStageClass("ground");
           setStageBackground("ground", true);
           renderDecor("ground");
-          lastLayoutWidth = wrapW();
-          lastLayoutHeight = wrapH();
+          refreshLayoutCache();
+          lastLayoutWidth = cachedW;
+          lastLayoutHeight = cachedH;
           updatePauseButtonVisibility();
         } catch (err) {
           console.error("초기화 오류:", err);
