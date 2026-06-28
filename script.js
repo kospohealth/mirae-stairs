@@ -125,8 +125,8 @@
       var moveDuration = 115;
       var stepDeadline = 0;
       var currentStepEl = null;
-      var lastHudScore = "";
-      var lastHudTime = "";
+      var lastHudScoreInt = -1;
+      var lastHudTimeInt = -1;
       var lastBoosterLabel = "";
       var currentStage = "ground";
       var activeBgLayer = "A";
@@ -137,6 +137,8 @@
       var cachedWrapRect = null;
       var lastTimerRatio = -1;
       var lastFrameTime = 0;
+      var cachedW = 360;
+      var cachedH = 640;
       var autoPaused = false;
       var audioUnlocked = false;
       var scoreUploadInProgress = false;
@@ -243,6 +245,7 @@
             shiftGameClock(bgDuration);
             paused = false;
             pauseStartedAt = 0;
+            lastFrameTime = 0;
             animationId = requestAnimationFrame(loop);
           }
         }
@@ -335,8 +338,12 @@
         }
       }
 
-      function wrapW() { return gameWrap.clientWidth || 360; }
-      function wrapH() { return gameWrap.clientHeight || 640; }
+      function refreshLayoutCache() {
+        cachedW = gameWrap.clientWidth || 360;
+        cachedH = gameWrap.clientHeight || 640;
+      }
+      function wrapW() { return cachedW; }
+      function wrapH() { return cachedH; }
       function isSupabaseReady() {
         // Supabase CDN은 첫 화면을 막지 않도록 async로 불러옵니다.
         // 랭킹/기록 버튼을 누르는 시점에 준비되어 있으면 여기서 다시 연결합니다.
@@ -385,15 +392,14 @@
       }
 
       function updateHud() {
-        var scoreText = String(Math.floor(score));
-        var timeText = String(seconds);
-        if (lastHudScore !== scoreText) {
-          scoreEl.textContent = scoreText;
-          lastHudScore = scoreText;
+        var floorScore = Math.floor(score);
+        if (lastHudScoreInt !== floorScore) {
+          scoreEl.textContent = String(floorScore);
+          lastHudScoreInt = floorScore;
         }
-        if (lastHudTime !== timeText) {
-          timeEl.textContent = timeText;
-          lastHudTime = timeText;
+        if (lastHudTimeInt !== seconds) {
+          timeEl.textContent = String(seconds);
+          lastHudTimeInt = seconds;
         }
         if (!booster) {
           if (lastBoosterLabel !== "⚡ x0") {
@@ -886,11 +892,14 @@
         lastPrunedIndex = 0;
         lastTimerRatio = -1;
         lastFrameTime = 0;
+        lastHudScoreInt = -1;
+        lastHudTimeInt = -1;
         cameraY = 0;
         targetCameraY = 0;
         currentStage = "ground";
-        lastLayoutWidth = wrapW();
-        lastLayoutHeight = wrapH();
+        refreshLayoutCache();
+        lastLayoutWidth = cachedW;
+        lastLayoutHeight = cachedH;
         pauseOverlay.classList.add("hidden");
         setGameWrapStageClass("ground");
         setStageBackground("ground", true);
@@ -1156,8 +1165,8 @@
         if (!running) return;
         animationId = requestAnimationFrame(loop);
         if (paused) { lastFrameTime = 0; return; }
-        // cap dt at 50ms so GC pauses don't cause camera teleport
-        var dt = lastFrameTime > 0 ? Math.min(50, now - lastFrameTime) : 16.67;
+        // cap dt at 33ms (2 frames) so GC pauses don't cause camera teleport
+        var dt = lastFrameTime > 0 ? Math.min(33, now - lastFrameTime) : 16.67;
         lastFrameTime = now;
         seconds = Math.floor((now - gameStartTime) / 1000);
         if (handleTimedQuiz()) return;
@@ -1197,8 +1206,9 @@
         if (e.key === "ArrowRight") beginMoveToNext("right");
       });
       window.addEventListener("resize", function () {
-        var width = wrapW();
-        var height = wrapH();
+        refreshLayoutCache();
+        var width = cachedW;
+        var height = cachedH;
         cachedWrapRect = null;
         if (!running) return;
         // 모바일 브라우저 주소창이 접히고 펴질 때 resize가 자주 발생합니다.
@@ -1297,8 +1307,9 @@
           setGameWrapStageClass("ground");
           setStageBackground("ground", true);
           renderDecor("ground");
-          lastLayoutWidth = wrapW();
-          lastLayoutHeight = wrapH();
+          refreshLayoutCache();
+          lastLayoutWidth = cachedW;
+          lastLayoutHeight = cachedH;
           updatePauseButtonVisibility();
         } catch (err) {
           console.error("초기화 오류:", err);
