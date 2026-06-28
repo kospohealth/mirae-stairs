@@ -914,88 +914,95 @@ input, textarea { -webkit-user-select: text; user-select: text; }
    Game Over 팝업만 10~15% 정도 압축해서 하단 버튼이 잘리지 않도록 조정합니다. */
 @media (max-width: 480px) {
   #gameOverOverlay {
-    padding: 12px 16px;
+    padding: 14px 16px;
     align-items: center;
   }
 
   #gameOverOverlay .panel {
     max-width: 316px;
-    max-height: calc(100svh - 24px);
-    padding: 18px 18px 16px;
+    max-height: 100%;
+    padding: 16px 18px 14px;
     border-radius: 24px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
   #gameOverOverlay .panel h2 {
-    min-height: 30px;
-    margin-bottom: 12px;
-    padding: 4px 14px;
-    font-size: 22px;
+    min-height: 28px;
+    margin-bottom: 8px;
+    padding: 3px 12px;
+    font-size: 21px;
   }
 
   #finalText {
-    gap: 2px;
-    margin: 0 0 7px;
+    gap: 1px;
+    margin: 0 0 5px;
   }
 
-  .resultLabel { font-size: 15px; }
+  .resultLabel { font-size: 14px; }
 
   .resultScore {
-    font-size: 54px;
-    margin: 4px 0 8px;
+    font-size: 50px;
+    margin: 2px 0 6px;
   }
 
-  .resultTime { font-size: 17px; }
+  .resultTime { font-size: 16px; }
 
   #gameOverOverlay #rankingBox {
-    margin: 7px 0;
-    padding: 7px;
-    border-radius: 13px;
+    margin: 5px 0;
+    padding: 6px;
+    border-radius: 12px;
   }
 
   #gameOverOverlay .rankingTitle {
-    margin-bottom: 4px;
-    font-size: 11.5px;
+    margin-bottom: 3px;
+    font-size: 11px;
   }
 
   #gameOverOverlay .rankingTable {
     font-size: 11px;
-    border-radius: 10px;
+    border-radius: 9px;
   }
 
   #gameOverOverlay .rankingTable th,
   #gameOverOverlay .rankingTable td {
-    padding: 4px 5px;
-    line-height: 1.22;
+    padding: 3px 5px;
+    line-height: 1.2;
   }
 
   #gameOverOverlay input {
-    height: 40px;
+    height: 38px;
     padding: 0 12px;
-    margin-top: 7px;
-    border-radius: 12px;
+    margin-top: 6px;
+    border-radius: 11px;
     font-size: 13px;
   }
 
   #gameOverOverlay #saveScoreBtn {
-    height: 48px;
-    margin-top: 10px;
-    border-radius: 14px;
-    font-size: 18px;
-    box-shadow: inset 0 3px 0 rgba(255,255,255,.45), 0 5px 0 #a13600, 0 8px 7px rgba(0,0,0,.18);
+    height: 46px;
+    margin-top: 8px;
+    border-radius: 13px;
+    font-size: 17px;
+    box-shadow: inset 0 3px 0 rgba(255,255,255,.45), 0 5px 0 #a13600, 0 7px 6px rgba(0,0,0,.18);
+  }
+
+  #shareBtn {
+    height: 42px;
+    margin-top: 7px;
+    border-radius: 12px;
+    font-size: 15px;
   }
 
   #gameOverOverlay .gameOverActions {
-    gap: 8px;
-    margin-top: 8px;
+    gap: 7px;
+    margin-top: 7px;
   }
 
   #gameOverOverlay #restartBtn,
   #gameOverOverlay #gameOverMainBtn {
-    height: 42px;
-    border-radius: 12px;
-    font-size: 15px;
+    height: 40px;
+    border-radius: 11px;
+    font-size: 14px;
     box-shadow: inset 0 2px 0 rgba(255,255,255,1), 0 4px 0 #d6c2a1, 0 6px 5px rgba(0,0,0,.10);
   }
 }
