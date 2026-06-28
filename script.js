@@ -528,7 +528,11 @@
         if (stage === "space") showToast("우주 구간 진입!", 1000);
       }
 
-      function clearWorld() { world.innerHTML = ""; steps = []; currentStepEl = null; }
+      function clearWorld() {
+        while (world.firstChild) world.removeChild(world.firstChild);
+        steps = [];
+        currentStepEl = null;
+      }
       function clampX(x) { var margin = 70; return Math.max(margin, Math.min(wrapW() - margin, x)); }
 
       function makeStep(index, x, y, type, renderStep) {
@@ -925,7 +929,12 @@
           prepareAudio();
           resetGame();
           playBgm();
-          startLoop();
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              lastFrameTime = 0;
+              startLoop();
+            });
+          });
         } catch (err) {
           console.error("게임 시작 오류:", err);
           showToast("게임을 시작할 수 없어요. 페이지를 새로고침 해주세요.", 3500);
