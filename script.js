@@ -183,7 +183,7 @@
       }
 
       var bgmEnabled = safeStorageGet("mirae_bgm") !== "off" && safeStorageGet("bgmEnabled") !== "false";
-      var sfxEnabled = safeStorageGet("mirae_sfx") !== "off" && safeStorageGet("sfxEnabled") !== "false";
+      var sfxEnabled = safeStorageGet("mirae_sfx") === "on";
 
       var bgm = new Audio("assets/bgm.mp3");
       var jumpSound = new Audio("assets/Jump.wav");
