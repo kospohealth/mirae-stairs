@@ -201,25 +201,25 @@
       var isWebKit = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
       var bgm = new Audio("assets/bgm.mp3");
-      var jumpSound = new Audio("assets/Jump.wav");
+      var jumpSound = isWebKit ? null : new Audio("assets/Jump.wav");
       var quizSound = new Audio("assets/quiz.wav");
       var gameOverSound = new Audio("assets/gameover.mp3");
 
       bgm.preload = "none";
-      jumpSound.preload = "none";
+      if (jumpSound) { jumpSound.preload = "none"; }
       quizSound.preload = "none";
       gameOverSound.preload = "none";
       bgm.loop = true;
       bgm.volume = 0.35;
 
-      jumpSound.volume = 0.45;
+      if (jumpSound) { jumpSound.volume = 0.45; }
       quizSound.volume = 0.55;
       gameOverSound.volume = 0.6;
 
       function prepareAudio() {
         if (audioPrepared) return;
         audioPrepared = true;
-        [bgm, jumpSound, quizSound, gameOverSound].forEach(function (sound) {
+        [bgm, jumpSound, quizSound, gameOverSound].filter(Boolean).forEach(function (sound) {
           try {
             sound.load();
           } catch (err) {
@@ -1127,7 +1127,7 @@
         }
         inputLocked = true;
         moving = true;
-        if (!isWebKit) playSfx(jumpSound);
+        playSfx(jumpSound);
         moveStartTime = performance.now();
         playerStart.x = cur.x;
         playerStart.y = cur.y;
