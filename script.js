@@ -198,6 +198,7 @@
 
       var bgmEnabled = safeStorageGet("mirae_bgm") !== "off" && safeStorageGet("bgmEnabled") !== "false";
       var sfxEnabled = safeStorageGet("mirae_sfx") === "on";
+      var isWebKit = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
       var bgm = new Audio("assets/bgm.mp3");
       var jumpSound = new Audio("assets/Jump.wav");
@@ -1126,7 +1127,7 @@
         }
         inputLocked = true;
         moving = true;
-        playSfx(jumpSound);
+        if (!isWebKit) playSfx(jumpSound);
         moveStartTime = performance.now();
         playerStart.x = cur.x;
         playerStart.y = cur.y;
