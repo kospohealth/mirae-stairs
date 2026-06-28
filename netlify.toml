@@ -1,0 +1,9 @@
+[build]
+  publish = "."
+  command = ""
+
+[context.production]
+  publish = "."
+
+[context."claude/game-campaign-readiness-cglgs3"]
+  publish = "."
