@@ -1296,7 +1296,7 @@
         if (!navigator.share) return;
         navigator.share({
           title: "미래의 계단(폭염편)",
-          text: "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
+          text: "\n나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
           url: "https://mirae-stairs.netlify.app/"
         }).catch(function () {});
       });
@@ -1304,7 +1304,7 @@
         if (!navigator.share) return;
         navigator.share({
           title: "미래의 계단(폭염편)",
-          text: "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
+          text: "\n나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
           url: "https://mirae-stairs.netlify.app/"
         }).catch(function () {});
       }); });
