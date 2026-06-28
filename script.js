@@ -928,10 +928,17 @@
           pauseOverlay.classList.add("hidden");
           prepareAudio();
           resetGame();
+          // 2프레임 대기 중 터치 입력 차단 (resetGame이 inputLocked=false로 열어두므로 재잠금)
+          inputLocked = true;
+          showToast("준비!", 350);
           playBgm();
           requestAnimationFrame(function () {
             requestAnimationFrame(function () {
+              // DOM 커밋·페인트 완료 후 타이머/입력을 실제 루프 기준으로 재설정
+              gameStartTime = performance.now();
+              resetDeadline();
               lastFrameTime = 0;
+              inputLocked = false;
               startLoop();
             });
           });
