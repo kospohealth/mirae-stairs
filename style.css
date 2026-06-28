@@ -32,6 +32,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       touch-action: none;
       background: linear-gradient(180deg, #ff7a18 0%, #ffb703 18%, #7dd3fc 45%, #bae6fd 68%, #fde68a 100%);
       box-shadow: 0 22px 60px rgba(21,37,67,.26);
+      transform: translateZ(0);
     }
     #gameWrap::before {
       content: "";
@@ -400,7 +401,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
     }
 
     #timerBarWrap { position: absolute; left: 20px; right: 20px; bottom: max(20px, calc(env(safe-area-inset-bottom) + 8px)); height: 16px; background: var(--cream-soft); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; z-index: 32; box-shadow: var(--soft-shadow); }
-    #timerBar { width: 100%; height: 100%; background: linear-gradient(90deg, #22c55e, #facc15, #fb7185); transform-origin: left center; }
+    #timerBar { width: 100%; height: 100%; background: linear-gradient(90deg, #22c55e, #facc15, #fb7185); transform-origin: left center; will-change: transform; }
     #directionGuide { position: absolute; left: 50px; right: 50px; bottom: max(84px, calc(env(safe-area-inset-bottom) + 72px)); z-index: 32; display: flex; justify-content: space-between; pointer-events: none; }
     .guideKey {
       width: 62px;

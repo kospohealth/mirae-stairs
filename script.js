@@ -135,6 +135,7 @@
       var lastPointerActionAt = 0;
       var lastPrunedIndex = 0;
       var cachedWrapRect = null;
+      var lastTimerRatio = -1;
       var autoPaused = false;
       var audioUnlocked = false;
       var scoreUploadInProgress = false;
@@ -618,11 +619,11 @@
         currentStepEl = steps[currentIndex] ? steps[currentIndex].el : null;
         if (currentStepEl) currentStepEl.classList.add("current");
       }
-      function renderWorld() { world.style.transform = "translateY(" + cameraY + "px)"; }
+      function renderWorld() { world.style.transform = "translateY(" + Math.round(cameraY) + "px)"; }
       function renderPlayer(extraScale, tilt) {
         if (typeof extraScale !== "number") extraScale = 1;
         if (typeof tilt !== "number") tilt = 0;
-        player.style.transform = "translate3d(" + playerPos.x + "px, " + (playerPos.y + cameraY) + "px, 0) translate(-50%, -100%) scale(" + extraScale + ") rotate(" + tilt + "deg)";
+        player.style.transform = "translate3d(" + Math.round(playerPos.x) + "px, " + Math.round(playerPos.y + cameraY) + "px, 0) translate(-50%, -100%) scale(" + extraScale.toFixed(3) + ") rotate(" + tilt + "deg)";
       }
       function snapToCurrentStep() {
         var s = currentStep();
@@ -882,6 +883,7 @@
         lastQuizSecond = -1;
         currentIndex = 0;
         lastPrunedIndex = 0;
+        lastTimerRatio = -1;
         cameraY = 0;
         targetCameraY = 0;
         currentStage = "ground";
@@ -1139,8 +1141,11 @@
       }
       function updateTimer(now) {
         var remain = Math.max(0, stepDeadline - now);
-        var ratio = remain / getStepTimeLimit();
-        timerBar.style.transform = "scaleX(" + Math.max(0, Math.min(1, ratio)) + ")";
+        var ratio = Math.round(Math.max(0, Math.min(1, remain / getStepTimeLimit())) * 500) / 500;
+        if (ratio !== lastTimerRatio) {
+          timerBar.style.transform = "scaleX(" + ratio + ")";
+          lastTimerRatio = ratio;
+        }
         if (remain <= 0 && !moving) gameOver("시간 초과!");
       }
       function loop(now) {
