@@ -979,7 +979,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   }
 
   #gameOverOverlay #saveScoreBtn {
-    height: 44px;
+    height: 42px;
     margin-top: 8px;
     border-radius: 13px;
     font-size: 17px;
@@ -987,7 +987,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   }
 
   #shareBtn {
-    height: 44px;
+    height: 42px;
     margin-top: 7px;
     border-radius: 12px;
     font-size: 15px;
