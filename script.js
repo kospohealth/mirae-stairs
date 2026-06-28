@@ -1297,7 +1297,7 @@
         navigator.share({
           title: "미래의계단 폭염편",
           text: "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
-          url: location.href.split("?")[0]
+          url: "https://mirae-stairs.netlify.app/"
         }).catch(function () {});
       });
       shareBtn.addEventListener("click", function (e) { handleFallbackClick(e, function () {
@@ -1305,7 +1305,7 @@
         navigator.share({
           title: "미래의계단 폭염편",
           text: "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
-          url: location.href.split("?")[0]
+          url: "https://mirae-stairs.netlify.app/"
         }).catch(function () {});
       }); });
       pauseBtn.addEventListener("pointerup", pauseGame);
