@@ -329,7 +329,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
       border-radius: 7px;
       background: linear-gradient(180deg, #f5dfa0 0%, #e8c97a 38%, #d4a94e 72%, #b88743 100%);
       border: 1.5px solid rgba(100,60,10,.28);
-      box-shadow: 0 5px 0 rgba(90,55,10,.50);
+      box-shadow: 0 5px 0 rgba(90,55,10,.55), 0 8px 14px rgba(60,30,5,.30);
       z-index: 6;
     }
 
