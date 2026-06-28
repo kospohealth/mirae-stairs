@@ -134,6 +134,7 @@
       var lastLayoutHeight = 0;
       var lastPointerActionAt = 0;
       var lastPrunedIndex = 0;
+      var cachedWrapRect = null;
       var autoPaused = false;
       var audioUnlocked = false;
       var scoreUploadInProgress = false;
@@ -437,13 +438,17 @@
         });
       }
 
-      var criticalImages = [
+      // 메인 화면에 당장 필요한 이미지만 대기 (배경+태양+캐릭터)
+      var firstPaintImages = [
         "assets/main_background.png",
+        "assets/sun.png",
+        "assets/mirae.png"
+      ];
+      // 메인 화면 표시 후 미리 캐시해 둘 이미지
+      var secondaryImages = [
         "assets/bg_stage1.png",
         "assets/bg_stage2.png",
         "assets/bg_stage3.png",
-        "assets/mirae.png",
-        "assets/sun.png",
         "assets/tutorial_1.png"
       ];
 
@@ -462,13 +467,13 @@
           img.onerror = function () { finish(false); };
           img.src = src;
 
-          // 네트워크나 파일 문제로 로딩이 오래 걸려도 첫 화면이 멈춰 보이지 않게 합니다.
-          setTimeout(function () { finish(false); }, 2500);
+          // 네트워크 지연으로 첫 화면이 멈추지 않도록 타임아웃을 짧게 유지합니다.
+          setTimeout(function () { finish(false); }, 1000);
         });
       }
 
       function preloadCriticalImages() {
-        return Promise.all(criticalImages.map(preloadImage));
+        return Promise.all(firstPaintImages.map(preloadImage));
       }
 
       function waitForFonts() {
@@ -479,7 +484,7 @@
         return Promise.race([
           document.fonts.ready,
           new Promise(function (resolve) {
-            setTimeout(resolve, 1800);
+            setTimeout(resolve, 800);
           })
         ]);
       }
@@ -572,14 +577,28 @@
         var y = Math.floor(wrapH() * PLAYER_BASE_RATIO);
         clearWorld();
         makeStep(0, x, y, "normal");
-        // 모바일 렉 방지: 처음부터 수백 개를 만들지 않고, 앞쪽 계단만 준비한 뒤 진행 중 추가합니다.
-        for (i = 1; i < 120; i++) appendNextStep(i);
+        // 첫 30개만 동기 생성해 startGame 블로킹을 최소화. ensureMoreSteps가 이후 추가.
+        for (i = 1; i < 30; i++) appendNextStep(i);
+      }
+
+      function pruneOldSteps() {
+        var pruneUntil = currentIndex - 20;
+        var s;
+        while (lastPrunedIndex < pruneUntil) {
+          s = steps[lastPrunedIndex];
+          if (s && s.el && s.el.parentNode) {
+            s.el.parentNode.removeChild(s.el);
+            s.el = null;
+          }
+          lastPrunedIndex++;
+        }
       }
 
       function ensureMoreSteps() {
         var i;
         var start;
         var end;
+        pruneOldSteps();
         if (currentIndex <= steps.length - 45) return;
         start = steps.length;
         end = start + 70;
@@ -862,6 +881,7 @@
         gameStartTime = performance.now();
         lastQuizSecond = -1;
         currentIndex = 0;
+        lastPrunedIndex = 0;
         cameraY = 0;
         targetCameraY = 0;
         currentStage = "ground";
@@ -1133,7 +1153,6 @@
         updateMovement(now);
         updateTimer(now);
         updateHud();
-        updatePauseButtonVisibility();
       }
 
       function stopOverlayTouch(e) { if (e && e.stopPropagation) e.stopPropagation(); }
@@ -1155,7 +1174,8 @@
         var rect;
         var x;
         if (!running || paused || isAnyOverlayOpen()) return;
-        rect = gameWrap.getBoundingClientRect();
+        if (!cachedWrapRect) cachedWrapRect = gameWrap.getBoundingClientRect();
+        rect = cachedWrapRect;
         x = e.clientX - rect.left;
         beginMoveToNext(x < rect.width / 2 ? "left" : "right");
       });
@@ -1167,6 +1187,7 @@
       window.addEventListener("resize", function () {
         var width = wrapW();
         var height = wrapH();
+        cachedWrapRect = null;
         if (!running) return;
         // 모바일 브라우저 주소창이 접히고 펴질 때 resize가 자주 발생합니다.
         // 아주 작은 높이 변화마다 맵 전체를 다시 만들면 플레이 중 끊김이 생겨서 의미 있는 변화만 처리합니다.
@@ -1279,6 +1300,8 @@
         }).then(function () {
           hideLoadingOverlay();
           runSelfTests();
+          // 메인 화면이 표시된 뒤 나머지 이미지를 백그라운드에서 캐시합니다.
+          secondaryImages.forEach(preloadImage);
         });
       }
 
