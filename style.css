@@ -21,7 +21,8 @@ input, textarea { -webkit-user-select: text; user-select: text; }
     #gameWrap {
       position: relative;
       width: min(100vw, 56.25vh);
-      height: min(177.78vw, 100vh);
+      height: min(177.78vw, 100vh);   /* fallback: svh 미지원 브라우저 */
+      height: min(177.78vw, 100svh);  /* svh: iOS 15.4+, Chrome 108+ — 주소창 포함 않는 안전 높이 */
       aspect-ratio: 9 / 16;
       overflow: hidden;
       border-radius: 22px;

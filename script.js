@@ -154,6 +154,7 @@
       var lastTimerScale = -1;
       var timerUrgent = false;
       var audioPrepared = false;
+      var gameStarting = false;
       var scoreUploadInProgress = false;
       var currentRecordSaved = false;
       var currentPublicRankingSaved = false;
@@ -273,7 +274,7 @@
         try {
           bgm.pause();
         } catch (err) {
-          console.error(err);
+          // 오디오 중단 실패는 무시 (게임 진행에 영향 없음)
         }
       }
 
@@ -934,6 +935,8 @@
 
       function startGame(e) {
         if (e && e.stopPropagation) e.stopPropagation();
+        if (gameStarting) return;
+        gameStarting = true;
         try {
           startOverlay.classList.add("hidden");
           closeMenuPages();
@@ -949,6 +952,7 @@
           requestAnimationFrame(function () {
             requestAnimationFrame(function () {
               // DOM 커밋·페인트 완료 후 타이머/입력을 실제 루프 기준으로 재설정
+              gameStarting = false;
               gameStartTime = performance.now();
               resetDeadline();
               lastFrameTime = 0;
@@ -957,6 +961,7 @@
             });
           });
         } catch (err) {
+          gameStarting = false;
           console.error("게임 시작 오류:", err);
           showToast("게임을 시작할 수 없어요. 페이지를 새로고침 해주세요.", 3500);
           startOverlay.classList.remove("hidden");
@@ -1253,21 +1258,26 @@
         if (e.key === "ArrowLeft") beginMoveToNext("left");
         if (e.key === "ArrowRight") beginMoveToNext("right");
       });
+      var _resizeRafPending = false;
       window.addEventListener("resize", function () {
-        refreshLayoutCache();
-        var width = cachedW;
-        var height = cachedH;
+        refreshLayoutCache(); // wrapW()/wrapH() 즉시 최신화
         if (!running) return;
-        // 모바일 브라우저 주소창이 접히고 펴질 때 resize가 자주 발생합니다.
-        // 아주 작은 높이 변화마다 맵 전체를 다시 만들면 플레이 중 끊김이 생겨서 의미 있는 변화만 처리합니다.
-        if (Math.abs(width - lastLayoutWidth) < 24 && Math.abs(height - lastLayoutHeight) < 120) return;
-        lastLayoutWidth = width;
-        lastLayoutHeight = height;
-        var savedIndex = currentIndex;
-        generateMap(savedIndex);
-        currentIndex = savedIndex;
-        snapToCurrentStep();
-        resetDeadline();
+        // 주소창 접힘 등 미세 변화는 무시, orientation change 등 큰 변화만 처리
+        if (Math.abs(cachedW - lastLayoutWidth) < 24 && Math.abs(cachedH - lastLayoutHeight) < 120) return;
+        if (_resizeRafPending) return; // 한 프레임에 한 번만 실행
+        _resizeRafPending = true;
+        requestAnimationFrame(function () {
+          _resizeRafPending = false;
+          refreshLayoutCache(); // 레이아웃이 완전히 정착된 뒤 다시 읽기
+          if (Math.abs(cachedW - lastLayoutWidth) < 24 && Math.abs(cachedH - lastLayoutHeight) < 120) return;
+          lastLayoutWidth = cachedW;
+          lastLayoutHeight = cachedH;
+          var savedIndex = currentIndex;
+          generateMap(savedIndex);
+          currentIndex = savedIndex;
+          snapToCurrentStep();
+          resetDeadline();
+        });
       });
 
       document.addEventListener("visibilitychange", function () {
