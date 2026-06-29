@@ -76,6 +76,7 @@
       var timerBar = document.getElementById("timerBar");
       var startOverlay = document.getElementById("startOverlay");
       var tutorialOverlay = document.getElementById("tutorialOverlay");
+      var tutorialStartBtn = document.getElementById("tutorialStartBtn");
       var guideOverlay = document.getElementById("guideOverlay");
       var rankingOverlay = document.getElementById("rankingOverlay");
       var quizOverlay = document.getElementById("quizOverlay");
@@ -157,6 +158,7 @@
       var timerUrgent = false;
       var audioPrepared = false;
       var gameStarting = false;
+      var hasSeenTutorial = false;
       var scoreUploadInProgress = false;
       var currentRecordSaved = false;
       var currentPublicRankingSaved = false;
@@ -1242,7 +1244,11 @@
       }
 
       function stopOverlayTouch(e) { if (e && e.stopPropagation) e.stopPropagation(); }
-      function handleStartButton(e) { if (e && e.stopPropagation) e.stopPropagation(); startGame(e); }
+      function handleStartButton(e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        if (!hasSeenTutorial) { openTutorial(e); return; }
+        startGame(e);
+      }
       function handleSaveButton(e) { if (e && e.stopPropagation) e.stopPropagation(); submitScoreRecord(e); }
       function handleFallbackClick(e, handler) {
         if (Date.now() - lastPointerActionAt < 650) {
@@ -1329,7 +1335,8 @@
         btn.addEventListener("pointerup", showMainMenu);
         btn.addEventListener("click", function (e) { handleFallbackClick(e, showMainMenu); });
       });
-      restartBtn.addEventListener("pointerup", handleStartButton);
+      restartBtn.addEventListener("pointerup", function (e) { if (e && e.stopPropagation) e.stopPropagation(); startGame(e); });
+      tutorialStartBtn.addEventListener("pointerup", function (e) { if (e && e.stopPropagation) e.stopPropagation(); hasSeenTutorial = true; startGame(e); });
       gameOverMainBtn.addEventListener("pointerup", showMainMenu);
       saveScoreBtn.addEventListener("pointerup", handleSaveButton);
       shareBtn.addEventListener("pointerup", function (e) {
@@ -1358,7 +1365,8 @@
       rankingBtn.addEventListener("click", function (e) { handleFallbackClick(e, openRanking); });
       rulesBtn.addEventListener("click", function (e) { handleFallbackClick(e, function (event) { openExternalGuide(HEAT_RULES_URL, event); }); });
       kitBtn.addEventListener("click", function (e) { handleFallbackClick(e, function (event) { openExternalGuide(HEAT_KIT_URL, event); }); });
-      restartBtn.addEventListener("click", function (e) { handleFallbackClick(e, handleStartButton); });
+      restartBtn.addEventListener("click", function (e) { if (Date.now() - lastPointerActionAt < 650) { e.stopPropagation(); return; } startGame(e); });
+      tutorialStartBtn.addEventListener("click", function (e) { if (Date.now() - lastPointerActionAt < 650) { e.stopPropagation(); return; } hasSeenTutorial = true; startGame(e); });
       gameOverMainBtn.addEventListener("click", function (e) { handleFallbackClick(e, showMainMenu); });
       saveScoreBtn.addEventListener("click", function (e) { handleFallbackClick(e, handleSaveButton); });
       pauseBtn.addEventListener("click", function (e) { handleFallbackClick(e, pauseGame); });
