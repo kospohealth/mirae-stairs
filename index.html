@@ -51,7 +51,7 @@
       }, { passive: true });
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=20260628-v3" />
+  <link rel="stylesheet" href="style.css?v=20260629-v4" />
   <style>
     /* QR 첫 진입에서 외부 CSS가 늦게 잡혀도 메인 버튼 크기가 작아지지 않도록 고정 */
     #startOverlay .mainPanel {
@@ -285,6 +285,8 @@
         <h2 id="quizTitle">폭염 퀴즈</h2>
         <p id="quizQuestion"></p>
         <div id="choices"></div>
+        <p id="quizExplanation" class="hidden"></p>
+        <button id="quizConfirmBtn" class="hidden" type="button">확인</button>
       </div>
     </div>
 
@@ -321,6 +323,6 @@
     </div>
   </div>
 
-  <script defer src="script.js?v=20260629-v12"></script>
+  <script defer src="script.js?v=20260629-v13"></script>
 </body>
 </html>

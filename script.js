@@ -84,6 +84,8 @@
       var quizTitle = document.getElementById("quizTitle");
       var quizQuestion = document.getElementById("quizQuestion");
       var choices = document.getElementById("choices");
+      var quizExplanation = document.getElementById("quizExplanation");
+      var quizConfirmBtn = document.getElementById("quizConfirmBtn");
       var finalText = document.getElementById("finalText");
       var startBtn = document.getElementById("startBtn");
       var tutorialBtn = document.getElementById("tutorialBtn");
@@ -1006,6 +1008,9 @@
 
         quizTitle.textContent = mode === "revive" ? "부활 폭염퀴즈" : "보너스 폭염퀴즈";
         quizQuestion.textContent = q.question;
+        quizExplanation.textContent = "";
+        quizExplanation.className = "hidden";
+        quizConfirmBtn.className = "hidden";
         q.choices.forEach(function (choice, index) {
           var btn = document.createElement("button");
           btn.type = "button";
@@ -1019,7 +1024,10 @@
             if (!correct) {
               choices.querySelectorAll(".choiceBtn")[q.answer].classList.add("choiceCorrect");
             }
-            setTimeout(function () { answerQuiz(correct); }, correct ? 800 : 1200);
+            quizExplanation.textContent = (correct ? "✅ 정답! " : "❌ 오답! ") + q.explanation;
+            quizExplanation.className = correct ? "quizExplanationCorrect" : "quizExplanationWrong";
+            quizConfirmBtn.className = "";
+            quizConfirmBtn._correct = correct;
           });
           choices.appendChild(btn);
         });
@@ -1291,6 +1299,10 @@
       guideOverlay.addEventListener("pointerdown", stopOverlayTouch);
       rankingOverlay.addEventListener("pointerdown", stopOverlayTouch);
       quizOverlay.addEventListener("pointerdown", stopOverlayTouch);
+      quizConfirmBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        answerQuiz(!!quizConfirmBtn._correct);
+      });
       pauseOverlay.addEventListener("pointerdown", stopOverlayTouch);
       gameOverOverlay.addEventListener("pointerdown", stopOverlayTouch);
       nicknameInput.addEventListener("pointerdown", stopOverlayTouch);
