@@ -309,9 +309,12 @@
 
       var cachedW = 360;
       var cachedH = 640;
+      var cachedWrapLeft = 0;
       function refreshLayoutCache() {
-        cachedW = gameWrap.clientWidth || 360;
-        cachedH = gameWrap.clientHeight || 640;
+        var r = gameWrap.getBoundingClientRect();
+        cachedW = r.width || gameWrap.clientWidth || 360;
+        cachedH = r.height || gameWrap.clientHeight || 640;
+        cachedWrapLeft = r.left;
       }
       function wrapW() { return cachedW; }
       function wrapH() { return cachedH; }
@@ -1165,7 +1168,6 @@
         markCurrent();
         updateHud();
         updateStage();
-        ensureMoreSteps();
         if (score >= 5 && touchGuide.style.opacity !== "0") {
           touchGuide.style.transition = "opacity 0.8s";
           touchGuide.style.opacity = "0";
@@ -1228,6 +1230,7 @@
         updateMovement(now, dt);
         updateTimer(now);
         updateHud();
+        ensureMoreSteps();
       }
 
       function stopOverlayTouch(e) { if (e && e.stopPropagation) e.stopPropagation(); }
@@ -1246,12 +1249,8 @@
       }, true);
 
       gameWrap.addEventListener("pointerdown", function (e) {
-        var rect;
-        var x;
         if (!running || paused || isAnyOverlayOpen()) return;
-        rect = gameWrap.getBoundingClientRect();
-        x = e.clientX - rect.left;
-        beginMoveToNext(x < rect.width / 2 ? "left" : "right");
+        beginMoveToNext((e.clientX - cachedWrapLeft) < cachedW / 2 ? "left" : "right");
       });
       window.addEventListener("keydown", function (e) {
         if (!running || paused || isAnyOverlayOpen()) return;
