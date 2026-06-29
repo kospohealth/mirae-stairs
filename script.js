@@ -809,6 +809,17 @@
         }
       }
 
+      function lockEmployeeInput() {
+        employeeInput.readOnly = true;
+        employeeInput.style.opacity = "0.55";
+        employeeInput.style.cursor = "not-allowed";
+      }
+      function unlockEmployeeInput() {
+        employeeInput.readOnly = false;
+        employeeInput.style.opacity = "";
+        employeeInput.style.cursor = "";
+      }
+
       async function submitScoreRecord(e) {
         if (e && e.stopPropagation) e.stopPropagation();
         var nickname = nicknameInput.value.trim().slice(0, 8);
@@ -861,6 +872,8 @@
         }
 
         currentRecordSaved = true;
+        safeStorageSet("mirae_employee_id", employeeId);
+        lockEmployeeInput();
         saveScoreBtn.textContent = "기록 완료";
         showToast("기록과 공개 랭킹 반영 완료!", 1600);
         await loadRanking();
@@ -1071,7 +1084,14 @@
           : (prevBest > 0 ? '<span class="resultBest">최고 기록 ' + prevBest + '점</span>' : '');
         finalText.innerHTML = '<span class="resultLabel">최종 점수</span><strong class="resultScore">' + finalScore + '점</strong>' + bestLine + '<span class="resultTime">생존 시간 ' + seconds + '초</span>';
         nicknameInput.value = "";
-        employeeInput.value = "";
+        var _savedId = safeStorageGet("mirae_employee_id");
+        if (_savedId) {
+          employeeInput.value = _savedId;
+          lockEmployeeInput();
+        } else {
+          employeeInput.value = "";
+          unlockEmployeeInput();
+        }
         saveScoreBtn.disabled = false;
         saveScoreBtn.textContent = "기록하기";
         if (navigator.share) {
@@ -1355,6 +1375,11 @@
 
       function initGame() {
         try {
+          var _initSavedId = safeStorageGet("mirae_employee_id");
+          if (_initSavedId) {
+            employeeInput.value = _initSavedId;
+            lockEmployeeInput();
+          }
           updateSoundButtons();
           initSupabase();
           preloadStageBackgrounds();
