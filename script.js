@@ -1112,11 +1112,7 @@
         }
         saveScoreBtn.disabled = false;
         saveScoreBtn.textContent = "기록하기";
-        if (navigator.share) {
-          shareBtn.classList.remove("hidden");
-        } else {
-          shareBtn.classList.add("hidden");
-        }
+        shareBtn.classList.remove("hidden");
         loadRanking();
       }
       function handleTimedQuiz() {
@@ -1339,23 +1335,23 @@
       tutorialStartBtn.addEventListener("pointerup", function (e) { if (e && e.stopPropagation) e.stopPropagation(); hasSeenTutorial = true; startGame(e); });
       gameOverMainBtn.addEventListener("pointerup", showMainMenu);
       saveScoreBtn.addEventListener("pointerup", handleSaveButton);
-      shareBtn.addEventListener("pointerup", function (e) {
-        e.stopPropagation();
-        if (!navigator.share) return;
-        navigator.share({
-          title: "미래의 계단(폭염편)",
-          text: "\n나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
-          url: "https://mirae-stairs.netlify.app/"
-        }).catch(function () {});
-      });
-      shareBtn.addEventListener("click", function (e) { handleFallbackClick(e, function () {
-        if (!navigator.share) return;
-        navigator.share({
-          title: "미래의 계단(폭염편)",
-          text: "\n나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️",
-          url: "https://mirae-stairs.netlify.app/"
-        }).catch(function () {});
-      }); });
+      function doShare() {
+        var shareUrl = "https://mirae-stairs.netlify.app/";
+        var shareText = "\n나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️";
+        if (navigator.share) {
+          navigator.share({ title: "미래의 계단(폭염편)", text: shareText, url: shareUrl }).catch(function () {});
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(shareUrl + shareText).then(function () {
+            showToast("링크가 복사됐어요!", 1400);
+          }).catch(function () {
+            showToast(shareUrl, 2500);
+          });
+        } else {
+          showToast(shareUrl, 2500);
+        }
+      }
+      shareBtn.addEventListener("pointerup", function (e) { e.stopPropagation(); doShare(); });
+      shareBtn.addEventListener("click", function (e) { handleFallbackClick(e, doShare); });
       pauseBtn.addEventListener("pointerup", pauseGame);
       resumeBtn.addEventListener("pointerup", resumeGame);
       pauseMainBtn.addEventListener("pointerup", quitPausedGame);
