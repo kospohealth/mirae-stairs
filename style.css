@@ -856,7 +856,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .choiceCorrect::before { content: "✓ "; }
 .choiceWrong { background: #fee2e2 !important; border-color: #dc2626 !important; color: #991b1b !important; opacity: .85; }
 .choiceWrong::before { content: "✗ "; }
-.quizExplanationCorrect, .quizExplanationWrong { margin-top: 12px; padding: 10px 14px; border-radius: 12px; font-size: 14px; font-weight: 700; line-height: 1.5; text-align: left; }
+.quizExplanationCorrect, .quizExplanationWrong { margin-top: 12px; padding: 10px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; line-height: 1.5; text-align: left; }
 .quizExplanationCorrect { background: #dcfce7; color: #14532d; border: 1px solid #86efac; }
 .quizExplanationWrong { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 #quizConfirmBtn { margin-top: 14px; width: 100%; height: 52px; background: linear-gradient(to bottom, #ffa73b 0%, #ff5d00 100%); color: #fff; font-size: 18px; font-weight: 900; border: 0; border-radius: 16px; box-shadow: inset 0 4px 0 rgba(255,255,255,.4), 0 5px 0 #a13600, 0 8px 8px rgba(0,0,0,.2); }
