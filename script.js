@@ -1351,7 +1351,7 @@
       function doShare() {
         var shareUrl = "https://mirae-stairs.netlify.app/";
         var shareText = "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️";
-        var fullMsg = shareText + "\n" + shareUrl;
+        var fullMsg = "[미래의 계단]\n" + shareText + "\n" + shareUrl;
         if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized() && window.Kakao.Share) {
           window.Kakao.Share.sendDefault({ objectType: "text", text: fullMsg, link: { mobileWebUrl: shareUrl, webUrl: shareUrl } });
           return;
