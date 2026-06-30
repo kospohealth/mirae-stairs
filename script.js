@@ -1353,7 +1353,7 @@
         var shareText = "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️";
         var fullMsg = shareText + "\n" + shareUrl;
         if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized() && window.Kakao.Share) {
-          window.Kakao.Share.sendDefault({ objectType: "text", text: shareText, link: { mobileWebUrl: shareUrl, webUrl: shareUrl } });
+          window.Kakao.Share.sendDefault({ objectType: "text", text: fullMsg, link: { mobileWebUrl: shareUrl, webUrl: shareUrl } });
           return;
         }
         if (navigator.share) {
