@@ -1355,12 +1355,13 @@
           navigator.share({ title: "미래의 계단(폭염편)", text: shareText, url: shareUrl }).catch(function () {});
           return;
         }
+        var fullMsg = "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️\n" + shareUrl;
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(shareUrl).then(function () {
-            showToast("링크 복사 완료! 채팅창에 붙여넣기 하세요 😊", 2200);
-          }).catch(function () { showToast(shareUrl, 3000); });
+          navigator.clipboard.writeText(fullMsg).then(function () {
+            showToast("복사 완료! 채팅창에 붙여넣기 하세요 😊", 2200);
+          }).catch(function () { showToast(fullMsg, 3000); });
         } else {
-          showToast(shareUrl, 3000);
+          showToast(fullMsg, 3000);
         }
       }
       shareBtn.addEventListener("pointerup", function (e) { e.stopPropagation(); doShare(); });
