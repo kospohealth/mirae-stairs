@@ -97,6 +97,7 @@
             btn.addEventListener("click", function (event) {
               event.stopPropagation();
               if (btn.disabled) return;
+              if (performance.now() - quizOpenTime < 350) return;
               var correct = idx === currentQuizAnswer;
               preChoiceBtns.forEach(function (b) { b.disabled = true; });
               btn.classList.add(correct ? "choiceCorrect" : "choiceWrong");
@@ -186,6 +187,7 @@
       var hasSeenTutorial = false;
       var currentQuizAnswer = 0;
       var currentQuizExplanation = "";
+      var quizOpenTime = 0;
       var scoreUploadInProgress = false;
       var currentRecordSaved = false;
       var currentPublicRankingSaved = false;
@@ -1041,6 +1043,7 @@
         quizExplanation.textContent = "";
         quizExplanation.className = "hidden";
         quizConfirmBtn.className = "hidden";
+        quizOpenTime = performance.now();
         preChoiceBtns.forEach(function (btn, index) {
           btn.textContent = String(index + 1) + ". " + q.choices[index];
           btn.className = "choiceBtn";
