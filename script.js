@@ -87,6 +87,31 @@
       var choices = document.getElementById("choices");
       var quizExplanation = document.getElementById("quizExplanation");
       var quizConfirmBtn = document.getElementById("quizConfirmBtn");
+      var preChoiceBtns = (function () {
+        var btns = [];
+        for (var _i = 0; _i < 3; _i++) {
+          (function (idx) {
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "choiceBtn hidden";
+            btn.addEventListener("click", function (event) {
+              event.stopPropagation();
+              if (btn.disabled) return;
+              var correct = idx === currentQuizAnswer;
+              preChoiceBtns.forEach(function (b) { b.disabled = true; });
+              btn.classList.add(correct ? "choiceCorrect" : "choiceWrong");
+              if (!correct) preChoiceBtns[currentQuizAnswer].classList.add("choiceCorrect");
+              quizExplanation.textContent = (correct ? "✅ 정답! " : "❌ 오답! ") + currentQuizExplanation;
+              quizExplanation.className = correct ? "quizExplanationCorrect" : "quizExplanationWrong";
+              quizConfirmBtn.className = "";
+              quizConfirmBtn._correct = correct;
+            });
+            choices.appendChild(btn);
+            btns.push(btn);
+          })(_i);
+        }
+        return btns;
+      })();
       var finalText = document.getElementById("finalText");
       var startBtn = document.getElementById("startBtn");
       var tutorialBtn = document.getElementById("tutorialBtn");
@@ -159,6 +184,8 @@
       var audioPrepared = false;
       var gameStarting = false;
       var hasSeenTutorial = false;
+      var currentQuizAnswer = 0;
+      var currentQuizExplanation = "";
       var scoreUploadInProgress = false;
       var currentRecordSaved = false;
       var currentPublicRankingSaved = false;
@@ -1006,32 +1033,18 @@
         updatePauseButtonVisibility();
         quizMode = mode;
         quizOverlay.classList.remove("hidden");
-        choices.innerHTML = "";
 
+        currentQuizAnswer = q.answer;
+        currentQuizExplanation = q.explanation;
         quizTitle.textContent = mode === "revive" ? "부활 폭염퀴즈" : "보너스 폭염퀴즈";
         quizQuestion.textContent = q.question;
         quizExplanation.textContent = "";
         quizExplanation.className = "hidden";
         quizConfirmBtn.className = "hidden";
-        q.choices.forEach(function (choice, index) {
-          var btn = document.createElement("button");
-          btn.type = "button";
+        preChoiceBtns.forEach(function (btn, index) {
+          btn.textContent = String(index + 1) + ". " + q.choices[index];
           btn.className = "choiceBtn";
-          btn.textContent = String(index + 1) + ". " + choice;
-          btn.addEventListener("click", function (event) {
-            event.stopPropagation();
-            var correct = index === q.answer;
-            choices.querySelectorAll(".choiceBtn").forEach(function (b) { b.disabled = true; });
-            btn.classList.add(correct ? "choiceCorrect" : "choiceWrong");
-            if (!correct) {
-              choices.querySelectorAll(".choiceBtn")[q.answer].classList.add("choiceCorrect");
-            }
-            quizExplanation.textContent = (correct ? "✅ 정답! " : "❌ 오답! ") + q.explanation;
-            quizExplanation.className = correct ? "quizExplanationCorrect" : "quizExplanationWrong";
-            quizConfirmBtn.className = "";
-            quizConfirmBtn._correct = correct;
-          });
-          choices.appendChild(btn);
+          btn.disabled = false;
         });
       }
       function answerQuiz(correct) {
