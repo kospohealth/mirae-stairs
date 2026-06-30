@@ -1350,12 +1350,16 @@
       saveScoreBtn.addEventListener("pointerup", handleSaveButton);
       function doShare() {
         var shareUrl = "https://mirae-stairs.netlify.app/";
-        var shareText = "\n나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️";
+        var shareText = "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️";
+        var fullMsg = shareText + "\n" + shareUrl;
+        if (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized() && window.Kakao.Share) {
+          window.Kakao.Share.sendDefault({ objectType: "text", text: shareText, link: { mobileWebUrl: shareUrl, webUrl: shareUrl } });
+          return;
+        }
         if (navigator.share) {
           navigator.share({ title: "미래의 계단(폭염편)", text: shareText, url: shareUrl }).catch(function () {});
           return;
         }
-        var fullMsg = "나 " + Math.floor(score) + "점 찍었어! 같이 도전해봐 ☀️\n" + shareUrl;
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(fullMsg).then(function () {
             showToast("복사 완료! 채팅창에 붙여넣기 하세요 😊", 2200);

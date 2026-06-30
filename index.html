@@ -51,6 +51,31 @@
       }, { passive: true });
     })();
   </script>
+  <script>
+    (function () {
+      var _kakaoKey = "bf5103492812c0a1724c3c336f14f5b2";
+      var _kakaoRequested = false;
+
+      function loadKakaoSDK() {
+        if (_kakaoRequested || (window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized())) return;
+        _kakaoRequested = true;
+        var s = document.createElement("script");
+        s.src = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js";
+        s.onload = function () {
+          if (window.Kakao && !window.Kakao.isInitialized()) window.Kakao.init(_kakaoKey);
+        };
+        document.head.appendChild(s);
+      }
+
+      if (/KAKAOTALK/i.test(navigator.userAgent)) {
+        window.addEventListener("load", loadKakaoSDK, { once: true });
+      }
+
+      document.addEventListener("pointerdown", function (e) {
+        if (e.target && e.target.closest && e.target.closest("#shareBtn")) loadKakaoSDK();
+      }, { passive: true });
+    })();
+  </script>
   <link rel="stylesheet" href="style.css?v=20260629-v6" />
   <style>
     /* QR 첫 진입에서 외부 CSS가 늦게 잡혀도 메인 버튼 크기가 작아지지 않도록 고정 */
@@ -324,6 +349,6 @@
     </div>
   </div>
 
-  <script defer src="script.js?v=20260629-v27"></script>
+  <script defer src="script.js?v=20260629-v28"></script>
 </body>
 </html>
