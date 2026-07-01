@@ -369,7 +369,7 @@
             }
 
             tries += 1;
-            if (tries >= 20) {
+            if (tries >= 50) {
               resolve(false);
               return;
             }
@@ -785,11 +785,11 @@
         var html;
         var box = targetBox || rankingBox;
         if (!box) return;
+        box.innerHTML = "🏆 랭킹 불러오는 중...";
         if (!(await waitForSupabaseReady())) {
           box.innerHTML = "🏆 현재 랭킹을 불러올 수 없어요. 잠시 후 다시 시도해주세요.";
           return;
         }
-        box.innerHTML = "🏆 랭킹 불러오는 중...";
         result = await supabaseClient
           .from("scores")
           .select("nickname, score, created_at")
