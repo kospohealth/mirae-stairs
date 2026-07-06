@@ -79,7 +79,7 @@
       }, { passive: true });
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=20260706-v12" />
+  <link rel="stylesheet" href="style.css?v=20260706-v13" />
   <style>
     /* QR 첫 진입에서 외부 CSS가 늦게 잡혀도 메인 버튼 크기가 작아지지 않도록 고정 */
     #startOverlay .mainPanel {
@@ -304,7 +304,12 @@
     <div id="rankingOverlay" class="overlay hidden">
       <div class="panel infoPanel">
         <h2>현재 랭킹</h2>
-        <p class="rankingNotice">📊 중간 집계(7/6)<br>🥇 개인 1위 : 신재생(세종)<br>🏆 단체 순위<br>1위 한림🥇 2위 남제주🥈 3위 삼척🥉</p>
+        <div class="rankingNotice">
+          <div class="rn-summary">📊 중간 집계(7/6)</div>
+          <div class="rn-personal">🥇 개인 1위 : 신재생(세종)</div>
+          <div class="rn-group-title">🏆 단체 순위</div>
+          <div class="rn-group-ranks">1위 한림🥇 2위 남제주🥈 3위 삼척🥉</div>
+        </div>
         <div id="mainRankingBox" class="rankingList">🏆 랭킹 불러오는 중...</div>
         <button class="backMenuBtn" type="button">메인으로 돌아가기</button>
       </div>
