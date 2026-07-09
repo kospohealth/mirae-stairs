@@ -813,9 +813,9 @@
         box.innerHTML = html;
       }
 
-      async function savePublicRanking(nickname, finalScore) {
+      async function savePublicRanking(nickname, finalScore, employeeId, survivalSeconds) {
         if (!(await waitForSupabaseReady())) return { ok: false, skipped: true };
-        var result = await supabaseClient.from("scores").insert([{ nickname: nickname, score: finalScore }]);
+        var result = await supabaseClient.from("scores").insert([{ nickname: nickname, score: finalScore, employee_id: employeeId || null, survival_seconds: survivalSeconds || null }]);
         if (result.error) {
           console.error(result.error);
           return { ok: false };
@@ -874,7 +874,7 @@
         saveScoreBtn.disabled = true;
         saveScoreBtn.textContent = "기록 중...";
         if (!currentPublicRankingSaved) {
-          publicResult = await savePublicRanking(nickname, finalScore);
+          publicResult = await savePublicRanking(nickname, finalScore, employeeId, seconds);
           currentPublicRankingSaved = publicResult.ok;
         }
         if (!currentAdminSheetSaved) {
